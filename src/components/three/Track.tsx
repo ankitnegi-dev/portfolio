@@ -7,22 +7,6 @@ import * as THREE from 'three'
 export function TrackSegment() {
   const arrowCount = 8
 
-  const trackCurve = useMemo(() => {
-    return new THREE.CatmullRomCurve3([
-      new THREE.Vector3(0, 0, 6),
-      new THREE.Vector3(0, 0, 0),
-      new THREE.Vector3(2, 0, -6),
-      new THREE.Vector3(6, 0, -12),
-      new THREE.Vector3(6, 0, -20),
-    ])
-  }, [])
-
-  const trackPoints = trackCurve.getPoints(80)
-  const trackGeom = useMemo(() => {
-    const g = new THREE.BufferGeometry().setFromPoints(trackPoints)
-    return g
-  }, [trackPoints])
-
   return (
     <>
       {/* Dark asphalt ground */}
@@ -31,19 +15,19 @@ export function TrackSegment() {
         <meshStandardMaterial color="#111114" roughness={0.9} metalness={0.1} />
       </mesh>
 
-      {/* Red kerb strips - left */}
+      {/* Red kerb left */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-0.5, 0, -7]}>
         <planeGeometry args={[1, 30]} />
         <meshStandardMaterial color="#cc2200" roughness={0.8} />
       </mesh>
 
-      {/* Red kerb strips - right */}
+      {/* Red kerb right */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[6.5, 0, -7]}>
         <planeGeometry args={[1, 30]} />
         <meshStandardMaterial color="#cc2200" roughness={0.8} />
       </mesh>
 
-      {/* Left neon barrier wall */}
+      {/* Left neon barrier */}
       <mesh position={[-1, 0.3, -7]}>
         <boxGeometry args={[0.15, 0.6, 30]} />
         <meshStandardMaterial
@@ -55,7 +39,7 @@ export function TrackSegment() {
         />
       </mesh>
 
-      {/* Right neon barrier wall */}
+      {/* Right neon barrier */}
       <mesh position={[7, 0.3, -7]}>
         <boxGeometry args={[0.15, 0.6, 30]} />
         <meshStandardMaterial
@@ -67,7 +51,7 @@ export function TrackSegment() {
         />
       </mesh>
 
-      {/* Neon left arrows pointing left */}
+      {/* Left arrows */}
       {Array.from({ length: arrowCount }).map((_, i) => (
         <NeonArrow
           key={`left-${i}`}
@@ -77,7 +61,7 @@ export function TrackSegment() {
         />
       ))}
 
-      {/* Neon right arrows pointing right */}
+      {/* Right arrows */}
       {Array.from({ length: arrowCount }).map((_, i) => (
         <NeonArrow
           key={`right-${i}`}
@@ -87,10 +71,8 @@ export function TrackSegment() {
         />
       ))}
 
-      {/* Speed line strips on ceiling */}
       <SpeedLines />
 
-      {/* Track lighting */}
       <pointLight position={[3, 3, 0]} color="#ffffff" intensity={8} distance={15} />
       <pointLight position={[3, 2, -10]} color="#00ffff" intensity={15} distance={20} />
       <pointLight position={[3, 2, -20]} color="#ff00aa" intensity={15} distance={20} />
@@ -114,7 +96,8 @@ function NeonArrow({
   useFrame(({ clock }) => {
     if (arrowRef.current) {
       const mat = arrowRef.current.material as THREE.MeshStandardMaterial
-      mat.emissiveIntensity = 0.6 + Math.sin(clock.getElapsedTime() * 2 + position[2]) * 0.4
+      mat.emissiveIntensity =
+        0.6 + Math.sin(clock.getElapsedTime() * 2 + position[2]) * 0.4
     }
   })
 
@@ -132,18 +115,20 @@ function NeonArrow({
 }
 
 function SpeedLines() {
-  const lines = useMemo(() => {
-    return Array.from({ length: 6 }).map((_, i) => ({
-      x: 0.5 + i * 1.1,
-      color: i % 2 === 0 ? '#ff3300' : '#ffcc00',
-      width: 0.06 + Math.random() * 0.04,
-    }))
-  }, [])
+  const lines = useMemo(
+    () =>
+      Array.from({ length: 6 }).map((_, i) => ({
+        x: 0.5 + i * 1.1,
+        color: i % 2 === 0 ? '#ff3300' : '#ffcc00',
+        width: 0.06 + (i * 0.01),
+      })),
+    []
+  )
 
   return (
     <>
       {lines.map((line, i) => (
-        <mesh key={i} position={[line.x, 3.5, -7]} rotation={[0, 0, 0]}>
+        <mesh key={i} position={[line.x, 3.5, -7]}>
           <boxGeometry args={[line.width, 0.02, 28]} />
           <meshStandardMaterial
             color={line.color}

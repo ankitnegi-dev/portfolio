@@ -156,23 +156,7 @@ export default function Overlay() {
             <br />
             something
           </h2>
-          
-            href="mailto:you@example.com"
-            style={{
-              display: 'inline-block',
-              padding: '14px 32px',
-              border: '0.5px solid rgba(255,204,0,0.6)',
-              borderRadius: '8px',
-              color: '#ffcc00',
-              fontFamily: 'monospace',
-              fontSize: '13px',
-              letterSpacing: '0.15em',
-              textDecoration: 'none',
-              background: 'rgba(255,204,0,0.05)',
-            }}
-          >
-            GET IN TOUCH
-          </a>
+          <a href="mailto:you@example.com" style={{ display: 'inline-block', padding: '14px 32px', border: '0.5px solid rgba(255,204,0,0.6)', borderRadius: '8px', color: '#ffcc00', fontFamily: 'monospace', fontSize: '13px', letterSpacing: '0.15em', textDecoration: 'none', background: 'rgba(255,204,0,0.05)' }}>GET IN TOUCH</a>
         </div>
       </Panel>
     </>

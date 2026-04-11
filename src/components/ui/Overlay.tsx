@@ -1,93 +1,67 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-
-function useScrollProgress() {
-  const [progress, setProgress] = useState(0)
-  useEffect(() => {
-    const handleScroll = () => {
-      const maxScroll = document.body.scrollHeight - window.innerHeight
-      setProgress(maxScroll > 0 ? window.scrollY / maxScroll : 0)
-    }
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-  return progress
-}
+import { useEffect, useRef, useState } from 'react'
+import { scrollProgress } from '@/lib/scrollStore'
 
 function Panel({
   visible,
   align = 'left',
   children,
+  accent = 'rgba(0,255,255,0.15)',
 }: {
   visible: boolean
   align?: 'left' | 'right' | 'center'
   children: React.ReactNode
+  accent?: string
 }) {
-  const style: React.CSSProperties = {
-    position: 'fixed',
-    top: '50%',
-    left: align === 'left' ? '6vw' : align === 'center' ? '50%' : 'auto',
-    right: align === 'right' ? '6vw' : 'auto',
-    transform: align === 'center' ? 'translate(-50%, -50%)' : 'translateY(-50%)',
-    maxWidth: '520px',
-    opacity: visible ? 1 : 0,
-    transition: 'opacity 0.6s ease',
-    pointerEvents: visible ? 'auto' : 'none',
-    zIndex: 10,
-  }
-  return <div style={style}>{children}</div>
+  return (
+    <div style={{
+      position: 'fixed',
+      top: '50%',
+      left: align === 'left' ? '5vw' : align === 'center' ? '50%' : 'auto',
+      right: align === 'right' ? '5vw' : 'auto',
+      transform: align === 'center' ? 'translate(-50%, -50%)' : 'translateY(-50%)',
+      maxWidth: '500px',
+      opacity: visible ? 1 : 0,
+      transition: 'opacity 0.7s ease',
+      pointerEvents: visible ? 'auto' : 'none',
+      zIndex: 10,
+      background: 'rgba(5, 5, 10, 0.75)',
+      backdropFilter: 'blur(12px)',
+      WebkitBackdropFilter: 'blur(12px)',
+      borderRadius: '16px',
+      border: '0.5px solid ' + accent,
+      padding: '28px 32px',
+    }}>
+      {children}
+    </div>
+  )
 }
 
 const mkLabel = (color: string): React.CSSProperties => ({
   fontFamily: 'monospace',
   fontSize: '11px',
-  letterSpacing: '0.25em',
+  letterSpacing: '0.3em',
   color,
-  marginBottom: '12px',
-  textTransform: 'uppercase' as const,
+  marginBottom: '10px',
+  textTransform: 'uppercase',
+  opacity: 0.9,
 })
 
 const headingStyle: React.CSSProperties = {
-  fontSize: 'clamp(1.8rem, 3vw, 2.8rem)',
+  fontSize: 'clamp(1.6rem, 2.8vw, 2.4rem)',
   fontWeight: 700,
   color: '#ffffff',
   lineHeight: 1.2,
-  margin: '0 0 20px',
-}
-
-const bodyStyle: React.CSSProperties = {
-  color: 'rgba(255,255,255,0.55)',
-  fontSize: '15px',
-  lineHeight: 1.8,
-  maxWidth: '420px',
+  margin: '0 0 16px',
+  textShadow: '0 2px 20px rgba(0,0,0,0.8)',
 }
 
 const projects = [
-  {
-    name: 'TechDesk AI',
-    desc: 'Autonomous AI social media agent — LangGraph, Kafka, RAG',
-    url: 'https://github.com/ankitnegi-dev/Techdesk-ai-social-agent',
-    color: '#ff00aa',
-  },
-  {
-    name: 'FoodBridge',
-    desc: 'Real-time food redistribution PWA — Supabase, Leaflet, AI safety',
-    url: 'https://foodbridgeseven.vercel.app',
-    color: '#ff00aa',
-  },
-  {
-    name: 'ParForCharity',
-    desc: 'Golf scoring & charity fundraising — Stripe, Next.js, Supabase',
-    url: 'https://parforcharity.vercel.app',
-    color: '#ff00aa',
-  },
-  {
-    name: 'AI Dungeon Master',
-    desc: 'AI text adventure — Groq LLaMA 3.3 70B, FLUX.1, Web Speech API',
-    url: 'https://dungeon-master-kappa.vercel.app',
-    color: '#ff00aa',
-  },
+  { name: 'TechDesk AI', desc: 'Autonomous AI social media agent — LangGraph, Kafka, RAG', url: 'https://github.com/ankitnegi-dev/Techdesk-ai-social-agent' },
+  { name: 'FoodBridge', desc: 'Real-time food redistribution PWA — Supabase, Leaflet, AI safety', url: 'https://foodbridgeseven.vercel.app' },
+  { name: 'ParForCharity', desc: 'Golf scoring & charity fundraising — Stripe, Next.js, Supabase', url: 'https://parforcharity.vercel.app' },
+  { name: 'AI Dungeon Master', desc: 'AI text adventure — Groq LLaMA 3.3 70B, FLUX.1, Web Speech API', url: 'https://dungeon-master-kappa.vercel.app' },
 ]
 
 const socials = [
@@ -97,61 +71,168 @@ const socials = [
 ]
 
 export default function Overlay() {
-  const p = useScrollProgress()
+  const [p, setP] = useState(0)
+  const rafRef = useRef<number>(0)
+
+  useEffect(() => {
+    const tick = () => {
+      setP(scrollProgress.current)
+      rafRef.current = requestAnimationFrame(tick)
+    }
+    rafRef.current = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(rafRef.current)
+  }, [])
+
   const inRange = (a: number, b: number) => p >= a && p <= b
 
   return (
     <>
-      <style>{'@keyframes pulse{0%,100%{opacity:.25}50%{opacity:.6}}'}</style>
+      <style>{'@keyframes pulse{0%,100%{opacity:.4}50%{opacity:.8}}'}</style>
 
-      <Panel visible={inRange(0, 0.15)} align="center">
-        <div style={{ textAlign: 'center' }}>
-          <p style={mkLabel('#00ffff')}>Full Stack Developer · AI Engineer</p>
-          <h1 style={{ fontSize: 'clamp(2.8rem, 7vw, 5.5rem)', fontWeight: 700, color: '#ffffff', lineHeight: 1.05, margin: '0 0 20px', textShadow: '0 0 60px rgba(127,119,221,0.7)' }}>Ankit Negi</h1>
-          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '16px', marginBottom: '32px', maxWidth: '400px', margin: '0 auto 32px' }}>
-            Building production-grade web apps and AI agent systems
-          </p>
-          <p style={{ fontFamily: 'monospace', fontSize: '11px', color: 'rgba(255,255,255,0.25)', letterSpacing: '0.2em', animation: 'pulse 2s ease-in-out infinite' }}>SCROLL TO EXPLORE</p>
-        </div>
-      </Panel>
+      {/* Hero - no panel bg, just strong text shadow */}
+      <div style={{
+        position: 'fixed',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        textAlign: 'center',
+        opacity: inRange(0, 0.18) ? 1 : 0,
+        transition: 'opacity 0.7s ease',
+        pointerEvents: inRange(0, 0.18) ? 'auto' : 'none',
+        zIndex: 10,
+        maxWidth: '600px',
+        padding: '0 24px',
+      }}>
+        <p style={mkLabel('#00ffff')}>Full Stack Developer · AI Engineer</p>
+        <h1 style={{
+          fontSize: 'clamp(3rem, 8vw, 6rem)',
+          fontWeight: 800,
+          color: '#ffffff',
+          lineHeight: 1.0,
+          margin: '0 0 16px',
+          textShadow: '0 0 80px rgba(127,119,221,0.9), 0 4px 40px rgba(0,0,0,1)',
+          letterSpacing: '-0.02em',
+        }}>
+          Ankit Negi
+        </h1>
+        <p style={{
+          color: 'rgba(255,255,255,0.85)',
+          fontSize: '17px',
+          margin: '0 auto 28px',
+          maxWidth: '380px',
+          textShadow: '0 2px 20px rgba(0,0,0,1)',
+          fontWeight: 500,
+        }}>
+          Building production-grade web apps and AI agent systems
+        </p>
+        <p style={{
+          fontFamily: 'monospace',
+          fontSize: '11px',
+          color: 'rgba(255,255,255,0.5)',
+          letterSpacing: '0.25em',
+          animation: 'pulse 2s ease-in-out infinite',
+          textShadow: '0 2px 10px rgba(0,0,0,1)',
+        }}>
+          SCROLL TO EXPLORE
+        </p>
+      </div>
 
-      <Panel visible={inRange(0.18, 0.38)} align="left">
+      {/* About */}
+      <Panel visible={inRange(0.2, 0.42)} align="left" accent="rgba(0,255,255,0.2)">
         <p style={mkLabel('#00ffff')}>01 / About</p>
         <h2 style={headingStyle}>CS undergrad.<br />Full-stack builder.</h2>
-        <p style={bodyStyle}>
+        <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '14px', lineHeight: 1.8, margin: 0 }}>
           Dual Degree student at IIITDM Kancheepuram specialising in Computer Science.
-          I build and ship production-grade web applications and AI agent systems —
-          from multi-agent LLM orchestration to real-time full-stack platforms.
-          Hackathon participant with a track record of delivering end-to-end projects under tight deadlines.
+          I build and ship production-grade web apps and AI agent systems — from
+          multi-agent LLM orchestration to real-time full-stack platforms.
+          Hackathon participant who delivers end-to-end projects under tight deadlines.
         </p>
-        <div style={{ display: 'flex', gap: '12px', marginTop: '24px', flexWrap: 'wrap' as const }}>
+        <div style={{ display: 'flex', gap: '8px', marginTop: '20px', flexWrap: 'wrap' }}>
           {['React', 'Next.js', 'LangGraph', 'Python', 'Supabase', 'Groq AI'].map((s) => (
-            <span key={s} style={{ fontFamily: 'monospace', fontSize: '11px', padding: '4px 10px', border: '0.5px solid rgba(0,255,255,0.4)', borderRadius: '4px', color: '#00ffff' }}>{s}</span>
+            <span key={s} style={{
+              fontFamily: 'monospace',
+              fontSize: '11px',
+              padding: '3px 10px',
+              border: '0.5px solid rgba(0,255,255,0.5)',
+              borderRadius: '4px',
+              color: '#00ffff',
+              background: 'rgba(0,255,255,0.08)',
+            }}>{s}</span>
           ))}
         </div>
       </Panel>
 
-      <Panel visible={inRange(0.42, 0.68)} align="right">
+      {/* Projects */}
+      <Panel visible={inRange(0.45, 0.7)} align="right" accent="rgba(255,0,170,0.2)">
         <p style={mkLabel('#ff00aa')}>02 / Projects</p>
         <h2 style={headingStyle}>Selected work</h2>
-        <div style={{ display: 'flex', flexDirection: 'column' as const, gap: '10px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {projects.map((proj) => (
-            <a key={proj.name} href={proj.url} target="_blank" rel="noopener noreferrer" style={{ padding: '12px 16px', border: '0.5px solid rgba(255,0,170,0.3)', borderRadius: '8px', background: 'rgba(255,0,170,0.05)', cursor: 'pointer', color: '#ffffff', fontSize: '14px', textDecoration: 'none', display: 'block' }}>
-              <div style={{ fontWeight: 600, marginBottom: '4px' }}>{proj.name}</div>
-              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.45)', fontFamily: 'monospace' }}>{proj.desc}</div>
+            <a key={proj.name} href={proj.url} target="_blank" rel="noopener noreferrer"
+              style={{
+                padding: '10px 14px',
+                border: '0.5px solid rgba(255,0,170,0.25)',
+                borderRadius: '8px',
+                background: 'rgba(255,0,170,0.08)',
+                color: '#ffffff',
+                fontSize: '13px',
+                textDecoration: 'none',
+                display: 'block',
+                transition: 'background 0.2s, border-color 0.2s',
+              }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(255,0,170,0.18)'
+                ;(e.currentTarget as HTMLAnchorElement).style.borderColor = 'rgba(255,0,170,0.6)'
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(255,0,170,0.08)'
+                ;(e.currentTarget as HTMLAnchorElement).style.borderColor = 'rgba(255,0,170,0.25)'
+              }}
+            >
+              <div style={{ fontWeight: 600, marginBottom: '3px', color: '#ffffff' }}>{proj.name}</div>
+              <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.55)', fontFamily: 'monospace' }}>{proj.desc}</div>
             </a>
           ))}
         </div>
       </Panel>
 
-      <Panel visible={inRange(0.75, 1.0)} align="center">
+      {/* Contact */}
+      <Panel visible={inRange(0.75, 1.0)} align="center" accent="rgba(255,204,0,0.2)">
         <div style={{ textAlign: 'center' }}>
           <p style={mkLabel('#ffcc00')}>03 / Contact</p>
           <h2 style={headingStyle}>Let&apos;s build<br />something great</h2>
-          <a href="mailto:ank12it11@gmail.com" style={{ display: 'inline-block', padding: '14px 32px', border: '0.5px solid rgba(255,204,0,0.6)', borderRadius: '8px', color: '#ffcc00', fontFamily: 'monospace', fontSize: '13px', letterSpacing: '0.15em', textDecoration: 'none', background: 'rgba(255,204,0,0.05)', marginBottom: '24px' }}>ank12it11@gmail.com</a>
-          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginTop: '16px' }}>
+          <a href="mailto:ank12it11@gmail.com"
+            style={{
+              display: 'inline-block',
+              padding: '12px 28px',
+              border: '0.5px solid rgba(255,204,0,0.7)',
+              borderRadius: '8px',
+              color: '#ffcc00',
+              fontFamily: 'monospace',
+              fontSize: '13px',
+              letterSpacing: '0.1em',
+              textDecoration: 'none',
+              background: 'rgba(255,204,0,0.08)',
+              fontWeight: 500,
+            }}>
+            ank12it11@gmail.com
+          </a>
+          <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', marginTop: '18px' }}>
             {socials.map((s) => (
-              <a key={s.label} href={s.url} target="_blank" rel="noopener noreferrer" style={{ fontFamily: 'monospace', fontSize: '12px', color: 'rgba(255,255,255,0.4)', textDecoration: 'none', letterSpacing: '0.1em' }}>{s.label}</a>
+              <a key={s.label} href={s.url} target="_blank" rel="noopener noreferrer"
+                style={{
+                  fontFamily: 'monospace',
+                  fontSize: '12px',
+                  color: 'rgba(255,255,255,0.6)',
+                  textDecoration: 'none',
+                  letterSpacing: '0.1em',
+                  transition: 'color 0.2s',
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.color = '#ffffff' }}
+                onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.color = 'rgba(255,255,255,0.6)' }}
+              >
+                {s.label}
+              </a>
             ))}
           </div>
         </div>

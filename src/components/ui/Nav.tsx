@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { scrollProgress, scrollTo } from '@/lib/scrollStore'
+import { scrollProgress, instantScrollTo } from '@/lib/scrollStore'
 
 const sections = [
   { label: 'Home',     target: 0,    range: [0, 0.18] as [number, number] },
@@ -50,7 +50,7 @@ export default function Nav() {
         transition: 'background 0.4s ease',
       }}>
         <button
-          onClick={() => scrollTo(0)}
+          onClick={() => instantScrollTo(0)}
           style={{
             fontFamily: 'monospace', fontSize: '13px', fontWeight: 600,
             color: '#ffffff', letterSpacing: '0.05em',
@@ -64,7 +64,7 @@ export default function Nav() {
             return (
               <button
                 key={s.label}
-                onClick={() => scrollTo(s.target)}
+                onClick={() => instantScrollTo(s.target)}
                 style={{
                   fontFamily: 'monospace',
                   fontSize: '11px',
@@ -122,7 +122,7 @@ export default function Nav() {
           return (
             <button
               key={s.label}
-              onClick={() => scrollTo(s.target)}
+              onClick={() => instantScrollTo(s.target)}
               title={s.label}
               style={{
                 width: active ? '8px' : '5px',

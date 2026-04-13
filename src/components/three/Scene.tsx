@@ -4,10 +4,10 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Environment, useScroll, ScrollControls } from '@react-three/drei'
 import { EffectComposer, Bloom, ChromaticAberration, Vignette } from '@react-three/postprocessing'
 import { BlendFunction } from 'postprocessing'
-import { Suspense, useRef } from 'react'
+import { Suspense, useRef, useEffect } from 'react'
 import * as THREE from 'three'
 import { TrackSegment } from './Track'
-import { scrollProgress } from '@/lib/scrollStore'
+import { scrollProgress, scrollEl } from '@/lib/scrollStore'
 
 const CAMERA_PATH = new THREE.CatmullRomCurve3([
   new THREE.Vector3(3, 1.2, 8),
@@ -24,21 +24,51 @@ function CameraRig() {
   const targetPos = useRef(new THREE.Vector3())
   const targetLook = useRef(new THREE.Vector3())
 
+  const lastT = useRef(0)
+
   useFrame(() => {
     const t = scroll.offset
+    const delta = Math.abs(t - lastT.current)
+    lastT.current = t
     scrollProgress.current = t
+    sessionStorage.setItem('portfolioScroll', String(t))
     CAMERA_PATH.getPoint(Math.min(t, 0.99), targetPos.current)
     CAMERA_PATH.getPoint(Math.min(t + 0.05, 0.99), targetLook.current)
-    camera.position.lerp(targetPos.current, 0.08)
+    // If jump > 0.1 (nav click or back button), teleport instantly
+    const lerpFactor = delta > 0.05 ? 1 : 0.08
+    camera.position.lerp(targetPos.current, lerpFactor)
     camera.lookAt(targetLook.current)
   })
 
   return null
 }
 
+
+function ScrollCapture() {
+  useEffect(() => {
+    const attempt = (tries: number) => {
+      const containers = Array.from(document.querySelectorAll('div'))
+      const scrollable = containers.find(
+        (div) =>
+          div.scrollHeight > div.clientHeight + 50 &&
+          div !== document.body &&
+          div.clientHeight > 100
+      )
+      if (scrollable) {
+        scrollEl.current = scrollable as HTMLDivElement
+      } else if (tries > 0) {
+        setTimeout(() => attempt(tries - 1), 100)
+      }
+    }
+    attempt(20)
+  }, [])
+  return null
+}
+
 function SceneContents() {
   return (
     <>
+      <ScrollCapture />
       <TrackSegment />
       <CameraRig />
       <Environment preset="night" />
@@ -59,7 +89,7 @@ export default function Scene() {
       dpr={[1, 2]}
       style={{ background: '#05050a' }}
     >
-      <ScrollControls pages={3} damping={0.15}>
+      <ScrollControls pages={3} damping={0.001}>
         <Suspense fallback={null}>
           <SceneContents />
         </Suspense>

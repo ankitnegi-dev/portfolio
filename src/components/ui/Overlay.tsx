@@ -58,10 +58,10 @@ const headingStyle: React.CSSProperties = {
 }
 
 const projects = [
-  { name: 'TechDesk AI', desc: 'Autonomous AI social media agent — LangGraph, Kafka, RAG', url: 'https://github.com/ankitnegi-dev/Techdesk-ai-social-agent' },
-  { name: 'FoodBridge', desc: 'Real-time food redistribution PWA — Supabase, Leaflet, AI safety', url: 'https://foodbridgeseven.vercel.app' },
-  { name: 'ParForCharity', desc: 'Golf scoring & charity fundraising — Stripe, Next.js, Supabase', url: 'https://parforcharity.vercel.app' },
-  { name: 'AI Dungeon Master', desc: 'AI text adventure — Groq LLaMA 3.3 70B, FLUX.1, Web Speech API', url: 'https://dungeon-master-kappa.vercel.app' },
+  { name: 'TechDesk AI', desc: 'Autonomous AI social media agent — LangGraph, Kafka, RAG', url: '/projects/techdesk-ai' },
+  { name: 'FoodBridge', desc: 'Real-time food redistribution PWA — Supabase, Leaflet, AI safety', url: '/projects/foodbridge' },
+  { name: 'ParForCharity', desc: 'Golf scoring & charity fundraising — Stripe, Next.js, Supabase', url: '/projects/parforcharity' },
+  { name: 'AI Dungeon Master', desc: 'AI text adventure — Groq LLaMA 3.3 70B, FLUX.1, Web Speech API', url: '/projects/ai-dungeon-master' },
 ]
 
 const socials = [
@@ -168,7 +168,7 @@ export default function Overlay() {
         <h2 style={headingStyle}>Selected work</h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {projects.map((proj) => (
-            <a key={proj.name} href={proj.url} target="_blank" rel="noopener noreferrer"
+            <a key={proj.name} href={'/projects/' + proj.url.split('/').pop()?.replace('https://github.com/ankitnegi-dev/', '') || proj.name.toLowerCase().replace(/ /g, '-')}
               style={{
                 padding: '10px 14px',
                 border: '0.5px solid rgba(255,0,170,0.25)',
@@ -219,7 +219,7 @@ export default function Overlay() {
           </a>
           <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', marginTop: '18px' }}>
             {socials.map((s) => (
-              <a key={s.label} href={s.url} target="_blank" rel="noopener noreferrer"
+              <a key={s.label} href={s.url}
                 style={{
                   fontFamily: 'monospace',
                   fontSize: '12px',

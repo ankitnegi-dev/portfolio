@@ -9,10 +9,18 @@ import { restoreScroll } from '@/lib/scrollStore'
 
 const Scene = dynamic(() => import('@/components/three/Scene'), { ssr: false })
 
+interface PageState {
+  returning: boolean
+  loaded: boolean
+  savedPos: number
+}
+
 export default function Home() {
-  const [returning, setReturning] = useState(false)
-  const [loaded, setLoaded] = useState(false)
-  const [savedPos, setSavedPos] = useState(0)
+  const [state, setState] = useState<PageState>({
+    returning: false,
+    loaded: false,
+    savedPos: 0,
+  })
 
   useEffect(() => {
     document.body.classList.add('scene-page')
@@ -20,26 +28,26 @@ export default function Home() {
 
     const pos = parseFloat(sessionStorage.getItem('portfolioScroll') || '0')
     if (pos > 0.01) {
-      setReturning(true)
-      setSavedPos(pos)
-      setLoaded(true)
+      setState({ returning: true, loaded: true, savedPos: pos })
     }
 
     return () => document.body.classList.remove('scene-page')
   }, [])
 
   useEffect(() => {
-    if (loaded && returning && savedPos > 0.01) {
-      restoreScroll(savedPos)
+    if (state.loaded && state.returning && state.savedPos > 0.01) {
+      restoreScroll(state.savedPos)
     }
-  }, [loaded, returning, savedPos])
+  }, [state.loaded, state.returning, state.savedPos])
 
-  const handleComplete = useCallback(() => setLoaded(true), [])
+  const handleComplete = useCallback(() => {
+    setState((prev) => ({ ...prev, loaded: true }))
+  }, [])
 
   return (
     <main style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
-      {!returning && <LoadingScreen onComplete={handleComplete} />}
-      {loaded && (
+      {!state.returning && <LoadingScreen onComplete={handleComplete} />}
+      {state.loaded && (
         <>
           <Scene />
           <Overlay />

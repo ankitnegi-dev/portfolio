@@ -7,6 +7,7 @@ import { BlendFunction } from 'postprocessing'
 import { Suspense, useRef, useEffect } from 'react'
 import * as THREE from 'three'
 import { TrackSegment } from './Track'
+import { Skills3D } from './Skills'
 import { scrollProgress, scrollEl } from '@/lib/scrollStore'
 
 const CAMERA_PATH = new THREE.CatmullRomCurve3([
@@ -15,7 +16,10 @@ const CAMERA_PATH = new THREE.CatmullRomCurve3([
   new THREE.Vector3(3, 0.9, 0),
   new THREE.Vector3(3, 0.8, -6),
   new THREE.Vector3(4, 0.8, -14),
-  new THREE.Vector3(5, 1.0, -20),
+  new THREE.Vector3(4, 0.9, -22),
+  new THREE.Vector3(3, 1.0, -32),
+  new THREE.Vector3(3, 1.0, -42),
+  new THREE.Vector3(3, 1.0, -52),
 ])
 
 function CameraRig() {
@@ -70,6 +74,7 @@ function SceneContents() {
     <>
       <ScrollCapture />
       <TrackSegment />
+      <Skills3D />
       <CameraRig />
       <Environment preset="night" />
       <EffectComposer>
@@ -89,7 +94,7 @@ export default function Scene() {
       dpr={[1, 2]}
       style={{ background: '#05050a' }}
     >
-      <ScrollControls pages={3} damping={0.001}>
+      <ScrollControls pages={5} damping={0.001}>
         <Suspense fallback={null}>
           <SceneContents />
         </Suspense>

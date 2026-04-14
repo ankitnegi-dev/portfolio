@@ -4,10 +4,11 @@ import { useEffect, useRef, useState } from 'react'
 import { scrollProgress, instantScrollTo } from '@/lib/scrollStore'
 
 const sections = [
-  { label: 'Home',     target: 0,    range: [0, 0.18] as [number, number] },
-  { label: 'About',    target: 0.25, range: [0.2, 0.42] as [number, number] },
-  { label: 'Projects', target: 0.55, range: [0.45, 0.7] as [number, number] },
-  { label: 'Contact',  target: 0.85, range: [0.75, 1.0] as [number, number] },
+  { label: 'Home',     target: 0,    range: [0, 0.12] as [number, number] },
+  { label: 'About',    target: 0.15, range: [0.13, 0.28] as [number, number] },
+  { label: 'Projects', target: 0.35, range: [0.29, 0.48] as [number, number] },
+  { label: 'Skills',   target: 0.58, range: [0.49, 0.72] as [number, number] },
+  { label: 'Contact',  target: 0.85, range: [0.73, 1.0] as [number, number] },
 ]
 
 export default function Nav() {

@@ -135,9 +135,9 @@ export default function Overlay() {
         top: '50%', left: '50%',
         transform: 'translate(-50%, -50%)',
         textAlign: 'center',
-        opacity: inRange(0, 0.18) ? 1 : 0,
+        opacity: inRange(0, 0.12) ? 1 : 0,
         transition: 'opacity 0.7s ease',
-        pointerEvents: inRange(0, 0.18) ? 'auto' : 'none',
+        pointerEvents: inRange(0, 0.12) ? 'auto' : 'none',
         zIndex: 10,
         width: '90vw',
         maxWidth: '600px',
@@ -167,7 +167,7 @@ export default function Overlay() {
       </div>
 
       {/* About */}
-      <Panel visible={inRange(0.2, 0.42)} align="left" accent="rgba(0,255,255,0.2)">
+      <Panel visible={inRange(0.13, 0.28)} align="left" accent="rgba(0,255,255,0.2)">
         <p style={mkLabel('#00ffff')}>01 / About</p>
         <h2 style={headingStyle}>CS undergrad.<br />Full-stack builder.</h2>
         <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px', lineHeight: 1.75, margin: 0 }}>
@@ -189,7 +189,7 @@ export default function Overlay() {
       </Panel>
 
       {/* Projects */}
-      <Panel visible={inRange(0.45, 0.7)} align="right" accent="rgba(255,0,170,0.2)">
+      <Panel visible={inRange(0.29, 0.48)} align="right" accent="rgba(255,0,170,0.2)">
         <p style={mkLabel('#ff00aa')}>02 / Projects</p>
         <h2 style={headingStyle}>Selected work</h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -214,8 +214,32 @@ export default function Overlay() {
         </div>
       </Panel>
 
+
+      {/* Skills */}
+      <Panel visible={inRange(0.49, 0.72)} align="left" accent="rgba(127,119,221,0.2)">
+        <p style={mkLabel('#7F77DD')}>03 / Skills</p>
+        <h2 style={headingStyle}>The stack<br />I ship with</h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {[
+            { cat: 'AI & Agents', tags: ['LangGraph', 'Groq API', 'RAG', 'RLHF'], color: '#7F77DD' },
+            { cat: 'Frontend', tags: ['React 19', 'Next.js', 'Three.js', 'Tailwind'], color: '#00ffff' },
+            { cat: 'Backend', tags: ['FastAPI', 'Node.js', 'Kafka', 'Redis'], color: '#ff00aa' },
+            { cat: 'Database', tags: ['PostgreSQL', 'Supabase', 'pgvector'], color: '#ffcc00' },
+          ].map(({ cat, tags, color }) => (
+            <div key={cat}>
+              <p style={{ fontFamily: 'monospace', fontSize: '10px', color: 'rgba(255,255,255,0.3)', letterSpacing: '0.2em', marginBottom: '6px' }}>{cat}</p>
+              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                {tags.map((tag) => (
+                  <span key={tag} style={{ fontFamily: 'monospace', fontSize: '11px', padding: '3px 8px', border: '0.5px solid ' + color + '55', borderRadius: '4px', color, background: color + '11' }}>{tag}</span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </Panel>
+
       {/* Contact */}
-      <Panel visible={inRange(0.75, 1.0)} align="center" accent="rgba(255,204,0,0.2)">
+      <Panel visible={inRange(0.73, 1.0)} align="center" accent="rgba(255,204,0,0.2)">
         <p style={mkLabel('#ffcc00')}>03 / Contact</p>
         <h2 style={{ ...headingStyle, marginBottom: '16px' }}>Let&apos;s build<br />something great</h2>
         <ContactForm />

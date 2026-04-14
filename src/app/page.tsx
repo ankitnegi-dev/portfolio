@@ -5,7 +5,7 @@ import { useState, useCallback, useEffect } from 'react'
 import Overlay from '@/components/ui/Overlay'
 import Nav from '@/components/ui/Nav'
 import LoadingScreen from '@/components/ui/LoadingScreen'
-import { restoreScroll, instantScrollTo } from '@/lib/scrollStore'
+import { restoreScroll } from '@/lib/scrollStore'
 
 const Scene = dynamic(() => import('@/components/three/Scene'), { ssr: false })
 

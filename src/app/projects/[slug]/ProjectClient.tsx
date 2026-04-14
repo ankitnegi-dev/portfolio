@@ -26,6 +26,7 @@ export default function ProjectClient({ project }: { project: Project }) {
         backdropFilter: 'blur(12px)',
         zIndex: 10,
       }}>
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
         <a href="/" style={{
           fontFamily: 'monospace', fontSize: '12px',
           color: 'rgba(255,255,255,0.5)', textDecoration: 'none',
@@ -169,6 +170,7 @@ export default function ProjectClient({ project }: { project: Project }) {
               {link.label} ↗
             </a>
           ))}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <a href="/" style={{
             display: 'inline-block', padding: '14px 32px',
             border: '0.5px solid rgba(255,255,255,0.15)',

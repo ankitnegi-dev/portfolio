@@ -52,7 +52,7 @@ export default function ContactForm() {
           MESSAGE SENT
         </p>
         <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px' }}>
-          I'll get back to you soon.
+          I&apos;ll get back to you soon.
         </p>
         <button
           onClick={() => setStatus('idle')}

@@ -36,7 +36,7 @@ export default function ContactForm() {
     background: 'rgba(255,255,255,0.04)',
     border: '0.5px solid rgba(255,255,255,0.12)',
     borderRadius: '8px',
-    padding: '12px 16px',
+    padding: '14px 16px',
     color: '#ffffff',
     fontFamily: 'monospace',
     fontSize: '13px',
@@ -66,7 +66,7 @@ export default function ContactForm() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '10px' }}>
         <input
           placeholder="Name"
           value={form.name}

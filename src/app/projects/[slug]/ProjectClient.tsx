@@ -60,7 +60,7 @@ export default function ProjectClient({ project }: { project: Project }) {
         </div>
       </nav>
 
-      <div style={{ maxWidth: '860px', margin: '0 auto', padding: '60px 32px 120px' }}>
+      <div style={{ maxWidth: '860px', margin: '0 auto', padding: 'clamp(24px, 5vw, 60px) clamp(16px, 4vw, 32px) 80px' }}>
 
         {/* Header */}
         <div style={{ marginBottom: '64px' }}>
@@ -98,7 +98,7 @@ export default function ProjectClient({ project }: { project: Project }) {
         </section>
 
         {/* Problem / Solution */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '64px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginBottom: '48px' }}>
           <section style={{ background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '28px' }}>
             <p style={{ fontFamily: 'monospace', fontSize: '11px', letterSpacing: '0.25em', color: 'rgba(255,255,255,0.35)', marginBottom: '12px', textTransform: 'uppercase' }}>Problem</p>
             <p style={{ fontSize: '15px', color: 'rgba(255,255,255,0.65)', lineHeight: 1.8 }}>{project.problem}</p>

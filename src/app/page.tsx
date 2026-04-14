@@ -10,30 +10,46 @@ import { restoreScroll } from '@/lib/scrollStore'
 const Scene = dynamic(() => import('@/components/three/Scene'), { ssr: false })
 
 export default function Home() {
-  const [isReturning] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false
-    return parseFloat(sessionStorage.getItem('portfolioScroll') || '0') > 0.01
-  })
-
-  const [savedPos] = useState<number>(() => {
-    if (typeof window === 'undefined') return 0
-    return parseFloat(sessionStorage.getItem('portfolioScroll') || '0')
-  })
-
-  const [loaded, setLoaded] = useState(isReturning)
-  const handleComplete = useCallback(() => setLoaded(true), [])
+  const [mounted, setMounted] = useState(false)
+  const [isReturning, setIsReturning] = useState(false)
+  const [savedPos, setSavedPos] = useState(0)
+  const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
     document.body.classList.add('scene-page')
     document.body.classList.remove('project-page')
+
+    const pos = parseFloat(sessionStorage.getItem('portfolioScroll') || '0')
+    const returning = pos > 0.01
+
+    setIsReturning(returning)
+    setSavedPos(pos)
+    setLoaded(returning)
+    setMounted(true)
+
     return () => document.body.classList.remove('scene-page')
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
     if (loaded && isReturning && savedPos > 0.01) {
       restoreScroll(savedPos)
     }
-  }, [loaded, isReturning, savedPos])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loaded])
+
+  const handleComplete = useCallback(() => setLoaded(true), [])
+
+  if (!mounted) return (
+    <div style={{
+      width: '100vw', height: '100vh', background: '#05050a',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      color: '#00ffff', fontFamily: 'monospace', fontSize: '13px',
+      letterSpacing: '0.15em',
+    }}>
+      LOADING...
+    </div>
+  )
 
   return (
     <main style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>

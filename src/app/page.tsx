@@ -1,7 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import Overlay from '@/components/ui/Overlay'
 import Nav from '@/components/ui/Nav'
 import LoadingScreen from '@/components/ui/LoadingScreen'
@@ -9,45 +9,47 @@ import { restoreScroll } from '@/lib/scrollStore'
 
 const Scene = dynamic(() => import('@/components/three/Scene'), { ssr: false })
 
-interface PageState {
-  returning: boolean
-  loaded: boolean
-  savedPos: number
+function getSavedPos(): number {
+  if (typeof window === 'undefined') return 0
+  return parseFloat(sessionStorage.getItem('portfolioScroll') || '0')
 }
 
 export default function Home() {
-  const [state, setState] = useState<PageState>({
-    returning: false,
-    loaded: false,
-    savedPos: 0,
-  })
+  const savedPos = useRef(0)
+  const returning = useRef(false)
+  const [loaded, setLoaded] = useState(false)
+  const [ready, setReady] = useState(false)
 
   useEffect(() => {
     document.body.classList.add('scene-page')
     document.body.classList.remove('project-page')
 
-    const pos = parseFloat(sessionStorage.getItem('portfolioScroll') || '0')
-    if (pos > 0.01) {
-      setState({ returning: true, loaded: true, savedPos: pos })
+    const pos = getSavedPos()
+    savedPos.current = pos
+    returning.current = pos > 0.01
+
+    setReady(true)
+    if (returning.current) {
+      setLoaded(true)
     }
 
     return () => document.body.classList.remove('scene-page')
   }, [])
 
   useEffect(() => {
-    if (state.loaded && state.returning && state.savedPos > 0.01) {
-      restoreScroll(state.savedPos)
+    if (loaded && returning.current && savedPos.current > 0.01) {
+      restoreScroll(savedPos.current)
     }
-  }, [state.loaded, state.returning, state.savedPos])
+  }, [loaded])
 
-  const handleComplete = useCallback(() => {
-    setState((prev) => ({ ...prev, loaded: true }))
-  }, [])
+  const handleComplete = useCallback(() => setLoaded(true), [])
+
+  if (!ready) return null
 
   return (
     <main style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
-      {!state.returning && <LoadingScreen onComplete={handleComplete} />}
-      {state.loaded && (
+      {!returning.current && <LoadingScreen onComplete={handleComplete} />}
+      {loaded && (
         <>
           <Scene />
           <Overlay />

@@ -43,71 +43,30 @@ export default function Nav() {
     setMenuOpen(false)
   }
 
+  const navBg = scrolled || menuOpen ? 'rgba(5,5,10,0.9)' : 'transparent'
+  const navBlur = scrolled || menuOpen ? 'blur(12px)' : 'none'
+  const navBorder = scrolled ? '0.5px solid rgba(255,255,255,0.06)' : 'none'
+
   return (
     <>
-      {/* Progress bar */}
-      <div style={{
-        position: 'fixed', top: 0, left: 0,
-        width: p * 100 + '%', height: '2px',
-        background: 'linear-gradient(90deg, #534AB7, #00ffff)',
-        zIndex: 30, transition: 'width 0.1s ease',
-      }} />
+      <div style={{ position: 'fixed', top: 0, left: 0, width: p * 100 + '%', height: '2px', background: 'linear-gradient(90deg, #534AB7, #00ffff)', zIndex: 30, transition: 'width 0.1s ease' }} />
 
-      {/* Top nav */}
-      <nav style={{
-        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 20,
-        padding: isMobile ? '14px 20px' : '18px 32px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        background: scrolled || menuOpen ? 'rgba(5,5,10,0.9)' : 'transparent',
-        backdropFilter: scrolled || menuOpen ? 'blur(12px)' : 'none',
-        WebkitBackdropFilter: scrolled || menuOpen ? 'blur(12px)' : 'none',
-        borderBottom: scrolled ? '0.5px solid rgba(255,255,255,0.06)' : 'none',
-        transition: 'background 0.4s ease',
-      }}>
-        <button onClick={() => handleNav(0)} style={{
-          fontFamily: 'monospace', fontSize: '13px', fontWeight: 600,
-          color: '#ffffff', letterSpacing: '0.05em',
-          background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-        }}>AN</button>
+      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 20, padding: isMobile ? '14px 20px' : '18px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: navBg, backdropFilter: navBlur, WebkitBackdropFilter: navBlur, borderBottom: navBorder, transition: 'background 0.4s ease' }}>
+
+        <button onClick={() => handleNav(0)} style={{ fontFamily: 'monospace', fontSize: '13px', fontWeight: 600, color: '#ffffff', letterSpacing: '0.05em', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>AN</button>
 
         {isMobile ? (
-          /* Mobile hamburger */
-          <button
-            onClick={() => setMenuOpen((o) => !o)}
-            style={{
-              background: 'none', border: 'none', cursor: 'pointer',
-              display: 'flex', flexDirection: 'column', gap: '5px', padding: '4px',
-            }}
-          >
+          <button onClick={() => setMenuOpen((o) => !o)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: '5px', padding: '4px' }}>
             {[0, 1, 2].map((i) => (
-              <div key={i} style={{
-                width: '22px', height: '1.5px',
-                background: '#ffffff',
-                transition: 'all 0.3s ease',
-                transform: menuOpen
-                  ? i === 0 ? 'rotate(45deg) translate(5px, 5px)'
-                  : i === 1 ? 'opacity: 0'
-                  : 'rotate(-45deg) translate(5px, -5px)'
-                  : 'none',
-                opacity: menuOpen && i === 1 ? 0 : 1,
-              }} />
+              <div key={i} style={{ width: '22px', height: '1.5px', background: '#ffffff', opacity: menuOpen && i === 1 ? 0 : 1, transition: 'all 0.3s ease' }} />
             ))}
           </button>
         ) : (
-          /* Desktop nav items */
           <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
             {sections.map((s) => {
               const active = p >= s.range[0] && p <= s.range[1]
               return (
-                <button key={s.label} onClick={() => handleNav(s.target)} style={{
-                  fontFamily: 'monospace', fontSize: '11px',
-                  letterSpacing: '0.15em', textTransform: 'uppercase',
-                  color: active ? '#ffffff' : 'rgba(255,255,255,0.35)',
-                  background: active ? 'rgba(255,255,255,0.06)' : 'none',
-                  border: 'none', borderRadius: '4px',
-                  padding: '6px 14px', cursor: 'pointer',
-                  transition: 'color 0.3s ease, background 0.3s ease',
-                }}>{s.label}</button>
+                <button key={s.label} onClick={() => handleNav(s.target)} style={{ fontFamily: 'monospace', fontSize: '11px', letterSpacing: '0.15em', textTransform: 'uppercase', color: active ? '#ffffff' : 'rgba(255,255,255,0.35)', background: active ? 'rgba(255,255,255,0.06)' : 'none', border: 'none', borderRadius: '4px', padding: '6px 14px', cursor: 'pointer', transition: 'color 0.3s ease' }}>{s.label}</button>
               )
             })}
           </div>
@@ -115,115 +74,38 @@ export default function Nav() {
 
         {!isMobile && (
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-            
-              href="/resume.pdf"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                fontFamily: 'monospace', fontSize: '11px', letterSpacing: '0.15em',
-                color: 'rgba(255,255,255,0.4)', textDecoration: 'none',
-                padding: '7px 16px', border: '0.5px solid rgba(255,255,255,0.15)',
-                borderRadius: '4px', background: 'transparent',
-                transition: 'color 0.2s, border-color 0.2s',
-              }}
-              onMouseEnter={e => {
-                (e.currentTarget as HTMLAnchorElement).style.color = '#ffffff'
-                ;(e.currentTarget as HTMLAnchorElement).style.borderColor = 'rgba(255,255,255,0.4)'
-              }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLAnchorElement).style.color = 'rgba(255,255,255,0.4)'
-                ;(e.currentTarget as HTMLAnchorElement).style.borderColor = 'rgba(255,255,255,0.15)'
-              }}
-            >
-              RESUME
-            </a>
-            <a href="mailto:ank12it11@gmail.com" style={{
-              fontFamily: 'monospace', fontSize: '11px', letterSpacing: '0.15em',
-              color: '#00ffff', textDecoration: 'none',
-              padding: '7px 16px', border: '0.5px solid rgba(0,255,255,0.4)',
-              borderRadius: '4px', background: 'rgba(0,255,255,0.05)',
-            }}>HIRE ME</a>
+            <a href="/resume.pdf" target="_blank" rel="noopener noreferrer" style={{ fontFamily: 'monospace', fontSize: '11px', letterSpacing: '0.15em', color: 'rgba(255,255,255,0.4)', textDecoration: 'none', padding: '7px 16px', border: '0.5px solid rgba(255,255,255,0.15)', borderRadius: '4px', background: 'transparent' }}>RESUME</a>
+            <a href="mailto:ank12it11@gmail.com" style={{ fontFamily: 'monospace', fontSize: '11px', letterSpacing: '0.15em', color: '#00ffff', textDecoration: 'none', padding: '7px 16px', border: '0.5px solid rgba(0,255,255,0.4)', borderRadius: '4px', background: 'rgba(0,255,255,0.05)' }}>HIRE ME</a>
           </div>
         )}
       </nav>
 
-      {/* Mobile dropdown menu */}
       {isMobile && menuOpen && (
-        <div style={{
-          position: 'fixed', top: '52px', left: 0, right: 0,
-          background: 'rgba(5,5,10,0.95)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
-          zIndex: 19, padding: '12px 20px 20px',
-          borderBottom: '0.5px solid rgba(255,255,255,0.08)',
-        }}>
+        <div style={{ position: 'fixed', top: '52px', left: 0, right: 0, background: 'rgba(5,5,10,0.95)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', zIndex: 19, padding: '12px 20px 20px', borderBottom: '0.5px solid rgba(255,255,255,0.08)' }}>
           {sections.map((s) => {
             const active = p >= s.range[0] && p <= s.range[1]
             return (
-              <button key={s.label} onClick={() => handleNav(s.target)} style={{
-                display: 'block', width: '100%', textAlign: 'left',
-                fontFamily: 'monospace', fontSize: '13px',
-                letterSpacing: '0.15em', textTransform: 'uppercase',
-                color: active ? '#00ffff' : 'rgba(255,255,255,0.5)',
-                background: 'none', border: 'none',
-                padding: '12px 0', cursor: 'pointer',
-                borderBottom: '0.5px solid rgba(255,255,255,0.05)',
-              }}>{s.label}</button>
+              <button key={s.label} onClick={() => handleNav(s.target)} style={{ display: 'block', width: '100%', textAlign: 'left', fontFamily: 'monospace', fontSize: '13px', letterSpacing: '0.15em', textTransform: 'uppercase', color: active ? '#00ffff' : 'rgba(255,255,255,0.5)', background: 'none', border: 'none', padding: '12px 0', cursor: 'pointer', borderBottom: '0.5px solid rgba(255,255,255,0.05)' }}>{s.label}</button>
             )
           })}
-          <a href="/resume.pdf" target="_blank" rel="noopener noreferrer" style={{
-            display: 'block', marginTop: '8px',
-            fontFamily: 'monospace', fontSize: '12px',
-            letterSpacing: '0.15em', color: 'rgba(255,255,255,0.4)',
-            textDecoration: 'none', padding: '10px 0',
-            borderBottom: '0.5px solid rgba(255,255,255,0.05)',
-          }}>RESUME ↗</a>
-          <a href="mailto:ank12it11@gmail.com" style={{
-            display: 'block', marginTop: '8px',
-            fontFamily: 'monospace', fontSize: '12px',
-            letterSpacing: '0.15em', color: '#00ffff',
-            textDecoration: 'none', padding: '10px 0',
-          }}>HIRE ME →</a>
+          <a href="/resume.pdf" target="_blank" rel="noopener noreferrer" style={{ display: 'block', marginTop: '8px', fontFamily: 'monospace', fontSize: '12px', letterSpacing: '0.15em', color: 'rgba(255,255,255,0.4)', textDecoration: 'none', padding: '10px 0', borderBottom: '0.5px solid rgba(255,255,255,0.05)' }}>RESUME</a>
+          <a href="mailto:ank12it11@gmail.com" style={{ display: 'block', marginTop: '8px', fontFamily: 'monospace', fontSize: '12px', letterSpacing: '0.15em', color: '#00ffff', textDecoration: 'none', padding: '10px 0' }}>HIRE ME</a>
         </div>
       )}
 
-      {/* Right side dots — desktop only */}
       {!isMobile && (
-        <div style={{
-          position: 'fixed', right: '24px', top: '50%',
-          transform: 'translateY(-50%)',
-          display: 'flex', flexDirection: 'column', gap: '10px', zIndex: 20,
-        }}>
+        <div style={{ position: 'fixed', right: '24px', top: '50%', transform: 'translateY(-50%)', display: 'flex', flexDirection: 'column', gap: '10px', zIndex: 20 }}>
           {sections.map((s) => {
             const active = p >= s.range[0] && p <= s.range[1]
             return (
-              <button key={s.label} onClick={() => handleNav(s.target)} title={s.label}
-                style={{
-                  width: active ? '8px' : '5px', height: active ? '8px' : '5px',
-                  borderRadius: '50%',
-                  background: active ? '#00ffff' : 'rgba(255,255,255,0.2)',
-                  border: 'none', cursor: 'pointer', padding: 0,
-                  transition: 'all 0.3s ease',
-                  boxShadow: active ? '0 0 10px #00ffff' : 'none',
-                }}
-              />
+              <button key={s.label} onClick={() => handleNav(s.target)} title={s.label} style={{ width: active ? '8px' : '5px', height: active ? '8px' : '5px', borderRadius: '50%', background: active ? '#00ffff' : 'rgba(255,255,255,0.2)', border: 'none', cursor: 'pointer', padding: 0, transition: 'all 0.3s ease', boxShadow: active ? '0 0 10px #00ffff' : 'none' }} />
             )
           })}
         </div>
       )}
 
-      {/* Bottom section label */}
-      <div style={{
-        position: 'fixed', bottom: '24px', left: '50%',
-        transform: 'translateX(-50%)', zIndex: 20,
-        opacity: activeSection ? 1 : 0,
-        transition: 'opacity 0.4s ease', pointerEvents: 'none',
-      }}>
-        <p style={{
-          fontFamily: 'monospace', fontSize: '10px',
-          letterSpacing: '0.3em', color: 'rgba(255,255,255,0.3)',
-          textTransform: 'uppercase', textAlign: 'center',
-        }}>{activeSection?.label}</p>
+      <div style={{ position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)', zIndex: 20, opacity: activeSection ? 1 : 0, transition: 'opacity 0.4s ease', pointerEvents: 'none' }}>
+        <p style={{ fontFamily: 'monospace', fontSize: '10px', letterSpacing: '0.3em', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', textAlign: 'center' }}>{activeSection?.label}</p>
       </div>
     </>
   )

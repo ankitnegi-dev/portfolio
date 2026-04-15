@@ -28,15 +28,13 @@ export default function Home() {
     setMounted(true)
 
     return () => document.body.classList.remove('scene-page')
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
     if (loaded && isReturning && savedPos > 0.01) {
       restoreScroll(savedPos)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loaded])
+  }, [loaded, isReturning, savedPos])
 
   const handleComplete = useCallback(() => setLoaded(true), [])
 

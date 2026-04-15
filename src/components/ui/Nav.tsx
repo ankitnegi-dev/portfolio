@@ -134,7 +134,9 @@ export default function Nav() {
                 (e.currentTarget as HTMLAnchorElement).style.color = 'rgba(255,255,255,0.4)'
                 ;(e.currentTarget as HTMLAnchorElement).style.borderColor = 'rgba(255,255,255,0.15)'
               }}
-            >RESUME</a>
+            >
+              RESUME
+            </a>
             <a href="mailto:ank12it11@gmail.com" style={{
               fontFamily: 'monospace', fontSize: '11px', letterSpacing: '0.15em',
               color: '#00ffff', textDecoration: 'none',

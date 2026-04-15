@@ -9,6 +9,9 @@ export const metadata: Metadata = {
   description: 'Portfolio of Ankit Negi, CS undergraduate at IIITDM Kancheepuram. Building production-grade web apps and AI agent systems.',
   keywords: ['Ankit Negi', 'Full Stack Developer', 'AI Engineer', 'React', 'Next.js', 'LangGraph', 'Python'],
   authors: [{ name: 'Ankit Negi', url: 'https://github.com/ankitnegi-dev' }],
+  verification: {
+    google: 'COp5XC_Hkz2J4PfLpgP6Fk-i_ath25I2yxWHsbbIvc8',
+  },
   openGraph: {
     title: 'Ankit Negi — Full Stack Developer & AI Engineer',
     description: 'Building production-grade web apps and AI agent systems.',

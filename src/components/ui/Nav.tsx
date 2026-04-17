@@ -75,7 +75,7 @@ export default function Nav() {
         {!isMobile && (
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
             <a href="/resume.pdf" target="_blank" rel="noopener noreferrer" style={{ fontFamily: 'monospace', fontSize: '11px', letterSpacing: '0.15em', color: 'rgba(255,255,255,0.4)', textDecoration: 'none', padding: '7px 16px', border: '0.5px solid rgba(255,255,255,0.15)', borderRadius: '4px', background: 'transparent' }}>RESUME</a>
-            <a href="mailto:ank12it11@gmail.com" style={{ fontFamily: 'monospace', fontSize: '11px', letterSpacing: '0.15em', color: '#00ffff', textDecoration: 'none', padding: '7px 16px', border: '0.5px solid rgba(0,255,255,0.4)', borderRadius: '4px', background: 'rgba(0,255,255,0.05)' }}>HIRE ME</a>
+            <button onClick={() => instantScrollTo(0.85)} style={{ fontFamily: 'monospace', fontSize: '11px', letterSpacing: '0.15em', color: '#00ffff', textDecoration: 'none', padding: '7px 16px', border: '0.5px solid rgba(0,255,255,0.4)', borderRadius: '4px', background: 'rgba(0,255,255,0.05)', cursor: 'pointer' }}>HIRE ME</button>
           </div>
         )}
       </nav>
@@ -89,7 +89,7 @@ export default function Nav() {
             )
           })}
           <a href="/resume.pdf" target="_blank" rel="noopener noreferrer" style={{ display: 'block', marginTop: '8px', fontFamily: 'monospace', fontSize: '12px', letterSpacing: '0.15em', color: 'rgba(255,255,255,0.4)', textDecoration: 'none', padding: '10px 0', borderBottom: '0.5px solid rgba(255,255,255,0.05)' }}>RESUME</a>
-          <a href="mailto:ank12it11@gmail.com" style={{ display: 'block', marginTop: '8px', fontFamily: 'monospace', fontSize: '12px', letterSpacing: '0.15em', color: '#00ffff', textDecoration: 'none', padding: '10px 0' }}>HIRE ME</a>
+          <button onClick={() => handleNav(0.85)} style={{ display: 'block', width: '100%', textAlign: 'left', marginTop: '8px', fontFamily: 'monospace', fontSize: '12px', letterSpacing: '0.15em', color: '#00ffff', background: 'none', border: 'none', padding: '10px 0', cursor: 'pointer' }}>HIRE ME →</button>
         </div>
       )}
 

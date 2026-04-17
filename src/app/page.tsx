@@ -7,6 +7,7 @@ import Nav from '@/components/ui/Nav'
 import LoadingScreen from '@/components/ui/LoadingScreen'
 import { restoreScroll } from '@/lib/scrollStore'
 import ChatAssistant from '@/components/ui/ChatAssistant'
+import CursorTrail from '@/components/ui/CursorTrail'
 
 const Scene = dynamic(() => import('@/components/three/Scene'), { ssr: false })
 
@@ -78,6 +79,7 @@ export default function Home() {
           <Overlay />
           <Nav />
           <ChatAssistant />
+          <CursorTrail />
         </>
       )}
     </main>

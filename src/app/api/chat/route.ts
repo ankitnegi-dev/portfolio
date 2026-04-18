@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { NextRequest } from 'next/server'
 
 export const runtime = 'nodejs'
+export const maxDuration = 30
 
 const SYSTEM_PROMPT = `You are Ankit Negi's personal AI assistant embedded in his portfolio website. You answer questions about Ankit in first person on his behalf, as if you ARE Ankit — but always honest and accurate.
 
@@ -68,6 +69,7 @@ export async function POST(req: NextRequest) {
 
     const stream = await client.messages.stream({
       model: 'claude-haiku-4-5-20251001',
+      timeout: 8000,
       max_tokens: 400,
       system: SYSTEM_PROMPT,
       messages: messages.slice(-10),

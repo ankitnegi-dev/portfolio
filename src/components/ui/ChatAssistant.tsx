@@ -20,7 +20,7 @@ export default function ChatAssistant() {
     { role: 'assistant', content: "Hi! I'm Ankit's AI assistant. Ask me anything about his skills, projects, or experience." }
   ])
   const [input, setInput] = useState('')
-  const [streaming, setStreaming] = useState(false)
+  const [loading, setLoading] = useState(false)
   const [pulse, setPulse] = useState(true)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -34,19 +34,16 @@ export default function ChatAssistant() {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, streaming])
+  }, [messages, loading])
 
   const send = useCallback(async (text: string) => {
     const userMsg = text.trim()
-    if (!userMsg || streaming) return
+    if (!userMsg || loading) return
 
     const newMessages: Message[] = [...messages, { role: 'user', content: userMsg }]
     setMessages(newMessages)
     setInput('')
-    setStreaming(true)
-
-    const assistantMsg: Message = { role: 'assistant', content: '' }
-    setMessages([...newMessages, assistantMsg])
+    setLoading(true)
 
     try {
       const res = await fetch('/api/chat', {
@@ -57,24 +54,19 @@ export default function ChatAssistant() {
         }),
       })
 
-      if (!res.ok || !res.body) throw new Error('Failed')
+      const data = await res.json()
 
-      const reader = res.body.getReader()
-      const decoder = new TextDecoder()
-      let full = ''
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        full += decoder.decode(value, { stream: true })
-        setMessages([...newMessages, { role: 'assistant', content: full }])
+      if (data.text) {
+        setMessages([...newMessages, { role: 'assistant', content: data.text }])
+      } else {
+        setMessages([...newMessages, { role: 'assistant', content: 'Something went wrong. Try again or email ank12it11@gmail.com directly.' }])
       }
     } catch {
-      setMessages([...newMessages, { role: 'assistant', content: 'Sorry, something went wrong. Try again or email ank12it11@gmail.com directly.' }])
+      setMessages([...newMessages, { role: 'assistant', content: 'Something went wrong. Try again or email ank12it11@gmail.com directly.' }])
     } finally {
-      setStreaming(false)
+      setLoading(false)
     }
-  }, [messages, streaming])
+  }, [messages, loading])
 
   const handleKey = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -88,20 +80,21 @@ export default function ChatAssistant() {
       {open && (
         <div style={{
           position: 'fixed', bottom: '84px', right: '24px',
-          width: '340px', maxHeight: '480px',
-          background: 'rgba(5,5,10,0.95)',
+          width: '340px', maxHeight: '500px',
+          background: 'rgba(5,5,10,0.96)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
           border: '0.5px solid rgba(0,255,255,0.3)',
           borderRadius: '16px', zIndex: 50,
           display: 'flex', flexDirection: 'column',
           overflow: 'hidden',
-          boxShadow: '0 0 40px rgba(0,255,255,0.08)',
         }}>
           <div style={{ padding: '14px 16px', borderBottom: '0.5px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#00ffff', boxShadow: '0 0 8px #00ffff' }} />
-              <span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#00ffff', letterSpacing: '0.2em' }}>ASK ANKIT AI</span>
+              <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: loading ? '#ffcc00' : '#00ffff', boxShadow: '0 0 8px ' + (loading ? '#ffcc00' : '#00ffff'), transition: 'all 0.3s' }} />
+              <span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#00ffff', letterSpacing: '0.2em' }}>
+                {loading ? 'THINKING...' : 'ASK ANKIT AI'}
+              </span>
             </div>
             <button onClick={() => setOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.3)', fontSize: '16px', lineHeight: 1, padding: '2px 6px' }}>x</button>
           </div>
@@ -110,25 +103,38 @@ export default function ChatAssistant() {
             {messages.map((msg, i) => (
               <div key={i} style={{ display: 'flex', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
                 <div style={{
-                  maxWidth: '85%',
-                  padding: '10px 13px',
+                  maxWidth: '85%', padding: '10px 13px',
                   borderRadius: msg.role === 'user' ? '12px 2px 12px 12px' : '2px 12px 12px 12px',
                   background: msg.role === 'user' ? 'rgba(0,255,255,0.08)' : 'rgba(127,119,221,0.1)',
                   border: msg.role === 'user' ? '0.5px solid rgba(0,255,255,0.25)' : '0.5px solid rgba(127,119,221,0.25)',
                 }}>
                   <p style={{ fontFamily: 'monospace', fontSize: '12px', color: 'rgba(255,255,255,0.85)', lineHeight: 1.7, margin: 0, whiteSpace: 'pre-wrap' }}>
                     {msg.content}
-                    {streaming && i === messages.length - 1 && msg.role === 'assistant' && (
-                      <span style={{ display: 'inline-block', width: '2px', height: '12px', background: '#00ffff', marginLeft: '2px', animation: 'blink 1s step-end infinite', verticalAlign: 'text-bottom' }} />
-                    )}
                   </p>
                 </div>
               </div>
             ))}
-            {messages.length === 1 && (
+
+            {loading && (
+              <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                <div style={{ padding: '10px 16px', borderRadius: '2px 12px 12px 12px', background: 'rgba(127,119,221,0.1)', border: '0.5px solid rgba(127,119,221,0.25)', display: 'flex', gap: '4px', alignItems: 'center' }}>
+                  {[0, 1, 2].map((i) => (
+                    <div key={i} style={{
+                      width: '5px', height: '5px', borderRadius: '50%',
+                      background: '#7F77DD',
+                      animation: 'bounce 1.2s ease-in-out infinite',
+                      animationDelay: i * 0.2 + 's',
+                    }} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {messages.length === 1 && !loading && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '4px' }}>
                 {SUGGESTED.map((q) => (
-                  <button key={q} onClick={() => send(q)} style={{ textAlign: 'left', background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '8px 12px', cursor: 'pointer', fontFamily: 'monospace', fontSize: '11px', color: 'rgba(255,255,255,0.45)', transition: 'border-color 0.2s, color 0.2s' }}
+                  <button key={q} onClick={() => send(q)}
+                    style={{ textAlign: 'left', background: 'rgba(255,255,255,0.03)', border: '0.5px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '8px 12px', cursor: 'pointer', fontFamily: 'monospace', fontSize: '11px', color: 'rgba(255,255,255,0.45)', transition: 'all 0.2s' }}
                     onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(0,255,255,0.3)'; (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.8)' }}
                     onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.08)'; (e.currentTarget as HTMLButtonElement).style.color = 'rgba(255,255,255,0.45)' }}
                   >{q}</button>
@@ -144,21 +150,18 @@ export default function ChatAssistant() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKey}
-              placeholder={streaming ? 'Thinking...' : 'Ask anything...'}
-              disabled={streaming}
+              placeholder={loading ? 'AI is thinking...' : 'Ask anything...'}
+              disabled={loading}
               style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: '8px', padding: '9px 12px', color: '#ffffff', fontFamily: 'monospace', fontSize: '12px', outline: 'none' }}
             />
-            <button
-              onClick={() => send(input)}
-              disabled={streaming || !input.trim()}
-              style={{ background: streaming || !input.trim() ? 'rgba(0,255,255,0.03)' : 'rgba(0,255,255,0.1)', border: '0.5px solid rgba(0,255,255,0.3)', borderRadius: '8px', padding: '9px 14px', cursor: streaming || !input.trim() ? 'not-allowed' : 'pointer', color: '#00ffff', fontFamily: 'monospace', fontSize: '11px', letterSpacing: '0.1em', opacity: streaming || !input.trim() ? 0.4 : 1 }}
+            <button onClick={() => send(input)} disabled={loading || !input.trim()}
+              style={{ background: loading || !input.trim() ? 'rgba(0,255,255,0.03)' : 'rgba(0,255,255,0.1)', border: '0.5px solid rgba(0,255,255,0.3)', borderRadius: '8px', padding: '9px 14px', cursor: loading || !input.trim() ? 'not-allowed' : 'pointer', color: '#00ffff', fontFamily: 'monospace', fontSize: '11px', letterSpacing: '0.1em', opacity: loading || !input.trim() ? 0.4 : 1 }}
             >SEND</button>
           </div>
         </div>
       )}
 
-      <button
-        onClick={() => setOpen((o) => !o)}
+      <button onClick={() => setOpen((o) => !o)}
         style={{
           position: 'fixed', bottom: '24px', right: '24px',
           width: '52px', height: '52px', borderRadius: '50%',
@@ -167,7 +170,6 @@ export default function ChatAssistant() {
           cursor: 'pointer', zIndex: 50,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           transition: 'all 0.3s ease',
-          boxShadow: pulse ? '0 0 0 0 rgba(0,255,255,0.4)' : 'none',
           animation: pulse ? 'ping 2s ease-out infinite' : 'none',
         }}
         title="Ask Ankit AI"
@@ -179,7 +181,7 @@ export default function ChatAssistant() {
 
       <style>{`
         @keyframes ping { 0% { box-shadow: 0 0 0 0 rgba(0,255,255,0.4); } 70% { box-shadow: 0 0 0 12px rgba(0,255,255,0); } 100% { box-shadow: 0 0 0 0 rgba(0,255,255,0); } }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); opacity: 0.3; } 40% { transform: scale(1); opacity: 1; } }
         div::-webkit-scrollbar { display: none; }
       `}</style>
     </>

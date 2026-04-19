@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
 
     const genAI = new GoogleGenerativeAI(apiKey)
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash-002',
+      model: 'gemini-2.0-flash-lite',
       systemInstruction: SYSTEM_PROMPT,
     })
 
@@ -61,9 +61,10 @@ export async function POST(req: NextRequest) {
     }
 
     const lastMessage = messages[messages.length - 1]
-    const lastText = lastMessage.role === 'user'
-      ? lastMessage.content
-      : userMessages[userMessages.length - 1].content
+    const lastText =
+      lastMessage.role === 'user'
+        ? lastMessage.content
+        : userMessages[userMessages.length - 1].content
 
     const chat = model.startChat({ history })
     const result = await chat.sendMessage(lastText)

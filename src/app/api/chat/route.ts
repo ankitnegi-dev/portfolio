@@ -1,27 +1,34 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import Groq from 'groq-sdk'
 import { NextRequest, NextResponse } from 'next/server'
 
 export const runtime = 'nodejs'
 export const maxDuration = 30
 
-const SYSTEM_PROMPT = `You are Ankit Negi's personal AI assistant embedded in his portfolio website. Answer questions about Ankit concisely and accurately. Speak in first person as Ankit. Keep answers to 2-4 sentences max.
+const SYSTEM_PROMPT = `You are Ankit Negi's personal AI assistant. Answer questions about Ankit concisely in first person. Keep answers to 2-4 sentences.
 
-PERSONAL: Ankit Negi, ank12it11@gmail.com, github.com/ankitnegi-dev, IIITDM Kancheepuram Chennai, Dual Degree CS (B.Tech+M.Tech) 2024-2029.
+PERSONAL: Ankit Negi, ank12it11@gmail.com, github.com/ankitnegi-dev, IIITDM Kancheepuram Chennai, Dual Degree CS B.Tech+M.Tech 2024-2029.
 
 PROJECTS:
-1. TechDesk AI - LangGraph multi-agent swarm, Kafka, RAG+pgvector, FastAPI HITL dashboard, RLHF, Groq LLaMA 3.3 70B
-2. FoodBridge - React 19, Supabase Realtime, Leaflet.js, OpenRouter AI food safety, PWA. Vashisht Hackathon 3.0.
-3. ParForCharity - Next.js 14, Stripe billing, Supabase JWT RBAC, prize draw engine, PostgreSQL RLS
-4. AI Dungeon Master - Groq SSE streaming, Llama 4 Scout vision, FLUX.1 images, Web Speech API
+1. TechDesk AI - LangGraph multi-agent swarm (4 agents), Apache Kafka, RAG+pgvector, FastAPI HITL dashboard, RLHF contextual bandits, Groq LLaMA 3.3 70B. GitHub: github.com/ankitnegi-dev/Techdesk-ai-social-agent
+2. FoodBridge - React 19, Supabase Realtime WebSockets, Leaflet.js map, OpenRouter AI food safety analysis, PWA+Android APK. Vashisht Hackathon 3.0. Live: foodbridgeseven.vercel.app
+3. ParForCharity - Next.js 14, Stripe billing+webhooks, Supabase JWT RBAC, prize draw engine, 11-table PostgreSQL RLS. Live: parforcharity.vercel.app
+4. AI Dungeon Master - Groq LLaMA 3.3 70B SSE streaming, Llama 4 Scout vision, FLUX.1 image gen, Web Speech API. Live: dungeon-master-kappa.vercel.app
 
-SKILLS: React/Next.js/TypeScript, Python/FastAPI/Node.js, LangGraph/RAG/RLHF/Groq API, PostgreSQL/Supabase/Redis, Docker/Kafka/GitHub Actions/Vercel
+SKILLS:
+- Frontend: React 19, Next.js 14/16, TypeScript, Tailwind CSS, Three.js, R3F, PWA
+- Backend: Node.js, FastAPI, Python, REST APIs, WebSockets, SSE, Webhooks
+- AI/ML: LangGraph, RAG, RLHF, Groq API, LLaMA 3.3 70B, Llama 4 Scout, Amazon Bedrock, OpenRouter, FLUX.1
+- Database: PostgreSQL, Supabase, pgvector, Redis, SQLAlchemy
+- DevOps: Docker, GitHub Actions, Vercel, Apache Kafka, Linux
 
-HACKATHONS: Vashisht 3.0 (FoodBridge, EcoTech), Amazon Nova AI Hackathon 2026 (MediScan AI, $40k pool)
+HACKATHONS: Vashisht Hackathon 3.0 (FoodBridge, EcoTech track), Amazon Nova AI Hackathon 2026 (MediScan AI, USD 40k prize pool)
 
-AVAILABILITY: Open to internships, part-time remote, freelance. Interested in AI/ML and full-stack. Ships fast under deadlines.`
+AVAILABILITY: Open to internships, part-time remote, freelance. Interested in AI/ML and full-stack. Ships fast under deadlines.
+
+INSTRUCTIONS: Be confident, friendly, first person. Don't invent info not listed above. For salary say open to discussion.`
 
 export async function POST(req: NextRequest) {
-  const apiKey = process.env.GEMINI_API_KEY
+  const apiKey = process.env.GROQ_API_KEY
   if (!apiKey) {
     return NextResponse.json({ error: 'Not configured' }, { status: 503 })
   }
@@ -32,44 +39,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey)
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash-lite',
-      systemInstruction: SYSTEM_PROMPT,
+    const client = new Groq({ apiKey })
+
+    const groqMessages = messages
+      .filter((m: { role: string; content: string }) => m.role === 'user' || m.role === 'assistant')
+      .map((m: { role: string; content: string }) => ({
+        role: m.role as 'user' | 'assistant',
+        content: m.content,
+      }))
+
+    const completion = await client.chat.completions.create({
+      model: 'llama-3.1-8b-instant',
+      max_tokens: 300,
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        ...groqMessages,
+      ],
     })
 
-    const userMessages = messages.filter(
-      (m: { role: string; content: string }) => m.role === 'user'
-    )
-
-    if (userMessages.length === 0) {
-      return NextResponse.json({ error: 'No user message' }, { status: 400 })
-    }
-
-    const history: { role: string; parts: { text: string }[] }[] = []
-    let expectUser = true
-
-    for (const msg of messages.slice(0, -1)) {
-      const geminiRole = msg.role === 'assistant' ? 'model' : 'user'
-      if (expectUser && geminiRole === 'user') {
-        history.push({ role: 'user', parts: [{ text: msg.content }] })
-        expectUser = false
-      } else if (!expectUser && geminiRole === 'model') {
-        history.push({ role: 'model', parts: [{ text: msg.content }] })
-        expectUser = true
-      }
-    }
-
-    const lastMessage = messages[messages.length - 1]
-    const lastText =
-      lastMessage.role === 'user'
-        ? lastMessage.content
-        : userMessages[userMessages.length - 1].content
-
-    const chat = model.startChat({ history })
-    const result = await chat.sendMessage(lastText)
-    const text = result.response.text()
-
+    const text = completion.choices[0]?.message?.content ?? ''
     return NextResponse.json({ text })
   } catch (err) {
     console.error('Chat error:', err)

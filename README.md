@@ -70,6 +70,7 @@ src/
 │   └── projects.ts      # Project data
 └── hooks/
 
+```
 ## Getting Started
 
 ### Prerequisites

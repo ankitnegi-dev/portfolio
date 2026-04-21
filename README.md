@@ -43,7 +43,7 @@
 
 ## Project Structure
 
-\`\`\`
+```text
 src/
 ├── app/
 │   ├── api/
@@ -59,17 +59,16 @@ src/
 │   │   ├── Track.tsx    # Neon racing track geometry
 │   │   └── Skills.tsx   # 3D floating skill pills
 │   └── ui/
-│       ├── Overlay.tsx      # HTML sections over the 3D scene
-│       ├── Nav.tsx          # Navigation + scroll dots
+│       ├── Overlay.tsx       # HTML sections over the 3D scene
+│       ├── Nav.tsx           # Navigation + scroll dots
 │       ├── ChatAssistant.tsx # AI chat bubble
-│       ├── ContactForm.tsx  # Email form
-│       ├── CursorTrail.tsx  # Neon particle trail
+│       ├── ContactForm.tsx   # Email form
+│       ├── CursorTrail.tsx   # Neon particle trail
 │       └── LoadingScreen.tsx
 ├── lib/
 │   ├── scrollStore.ts   # Shared scroll progress ref
 │   └── projects.ts      # Project data
 └── hooks/
-\`\`\`
 
 ## Getting Started
 

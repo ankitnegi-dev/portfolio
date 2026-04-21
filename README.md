@@ -43,6 +43,7 @@
 
 ## Project Structure
 
+```
 src/
 ├── app/
 │   ├── api/
@@ -68,7 +69,7 @@ src/
 │   ├── scrollStore.ts   # Shared scroll progress ref
 │   └── projects.ts      # Project data
 └── hooks/
-
+```
 
 ## Getting Started
 

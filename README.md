@@ -43,7 +43,6 @@
 
 ## Project Structure
 
-```text
 src/
 ├── app/
 │   ├── api/
@@ -70,7 +69,7 @@ src/
 │   └── projects.ts      # Project data
 └── hooks/
 
-```
+
 ## Getting Started
 
 ### Prerequisites

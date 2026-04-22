@@ -98,7 +98,7 @@ export default function Nav() {
           {sections.map((s) => {
             const active = p >= s.range[0] && p <= s.range[1]
             return (
-              <button key={s.label} onClick={() => handleNav(s.target)} title={s.label} style={{ width: active ? '8px' : '5px', height: active ? '8px' : '5px', borderRadius: '50%', background: active ? '#00ffff' : 'rgba(255,255,255,0.2)', border: 'none', cursor: 'pointer', padding: 0, transition: 'all 0.3s ease', boxShadow: active ? '0 0 10px #00ffff' : 'none' }} />
+              <button key={s.label} onClick={() => handleNav(s.target)} title={s.label} aria-label={'Navigate to ' + s.label} style={{ width: active ? '8px' : '5px', height: active ? '8px' : '5px', borderRadius: '50%', background: active ? '#00ffff' : 'rgba(255,255,255,0.2)', border: 'none', cursor: 'pointer', padding: 0, transition: 'all 0.3s ease', boxShadow: active ? '0 0 10px #00ffff' : 'none' }} />
             )
           })}
         </div>

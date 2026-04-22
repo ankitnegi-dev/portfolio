@@ -96,7 +96,7 @@ export default function ChatAssistant() {
                 {loading ? 'THINKING...' : 'ASK ANKIT AI'}
               </span>
             </div>
-            <button onClick={() => setOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.3)', fontSize: '16px', lineHeight: 1, padding: '2px 6px' }}>x</button>
+            <button onClick={() => setOpen(false)} aria-label="Close chat" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.3)', fontSize: '16px', lineHeight: 1, padding: '2px 6px' }}>x</button>
           </div>
 
           <div style={{ flex: 1, overflowY: 'auto', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '10px', scrollbarWidth: 'none' }}>
@@ -172,7 +172,7 @@ export default function ChatAssistant() {
           transition: 'all 0.3s ease',
           animation: pulse ? 'ping 2s ease-out infinite' : 'none',
         }}
-        title="Ask Ankit AI"
+        title="Ask Ankit AI" aria-label="Open AI chat assistant"
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00ffff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>

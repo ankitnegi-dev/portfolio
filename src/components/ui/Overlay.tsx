@@ -169,8 +169,8 @@ export default function Overlay() {
       {/* About */}
       <Panel visible={inRange(0.13, 0.28)} align="left" accent="rgba(0,255,255,0.2)">
         <p style={mkLabel('#00ffff')}>01 / About</p>
-        <h2 style={headingStyle}>CS undergrad.<br />Full-stack builder.</h2>
-        <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px', lineHeight: 1.75, margin: 0 }}>
+        <h2 className="reveal-line" style={headingStyle}>CS undergrad.<br />Full-stack builder.</h2>
+        <p className="reveal-line" style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px', lineHeight: 1.75, margin: 0 }}>
           Dual Degree student at IIITDM Kancheepuram. I build production-grade
           web apps and AI agent systems — from multi-agent LLM orchestration
           to real-time full-stack platforms.
@@ -191,7 +191,7 @@ export default function Overlay() {
       {/* Projects */}
       <Panel visible={inRange(0.29, 0.48)} align="right" accent="rgba(255,0,170,0.2)">
         <p style={mkLabel('#ff00aa')}>02 / Projects</p>
-        <h2 style={headingStyle}>Selected work</h2>
+        <h2 className="reveal-line" style={headingStyle}>Selected work</h2>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           {projects.map((proj) => (
             <a key={proj.name} href={proj.url}

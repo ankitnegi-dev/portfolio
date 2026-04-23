@@ -8,6 +8,7 @@ import LoadingScreen from '@/components/ui/LoadingScreen'
 import { restoreScroll } from '@/lib/scrollStore'
 import ChatAssistant from '@/components/ui/ChatAssistant'
 import CursorTrail from '@/components/ui/CursorTrail'
+import GitHubStats from '@/components/ui/GitHubStats'
 
 const Scene = dynamic(() => import('@/components/three/Scene'), { ssr: false })
 
@@ -80,6 +81,7 @@ export default function Home() {
           <Nav />
           <ChatAssistant />
           <CursorTrail />
+          <GitHubStats />
         </>
       )}
     </main>

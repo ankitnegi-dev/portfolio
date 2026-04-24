@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useEffect, Suspense } from 'react'
+import { useRef, useEffect } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
@@ -18,33 +18,49 @@ const CAR_PATH = new THREE.CatmullRomCurve3([
   new THREE.Vector3(3, 0.2, -53),
 ])
 
-export function Track() {
+function TrackInstance({ position }: { position: [number, number, number] }) {
   const { scene } = useGLTF('/models/track.glb')
+  const cloned = scene.clone()
 
   useEffect(() => {
-    scene.traverse((child) => {
+    cloned.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
         const mesh = child as THREE.Mesh
-        if (Array.isArray(mesh.material)) {
-          mesh.material.forEach(m => {
-            if (m instanceof THREE.MeshStandardMaterial) {
-              m.roughness = 0.8
-              m.metalness = 0.2
-            }
-          })
-        }
+        mesh.material = new THREE.MeshStandardMaterial({
+          color: '#1a1a1f',
+          roughness: 0.9,
+          metalness: 0.1,
+        })
         mesh.receiveShadow = true
       }
     })
-  }, [scene])
+  }, [cloned])
 
   return (
     <primitive
-      object={scene}
-      scale={[0.08, 0.08, 0.08]}
-      position={[3, -0.8, -25]}
-      rotation={[0, 0, 0]}
+      object={cloned}
+      scale={[0.12, 0.06, 0.2]}
+      position={position}
+      rotation={[0, Math.PI, 0]}
     />
+  )
+}
+
+export function Track() {
+  const segments: [number, number, number][] = [
+    [3, -0.5, 5],
+    [3, -0.5, -10],
+    [3, -0.5, -25],
+    [3, -0.5, -40],
+    [3, -0.5, -55],
+  ]
+
+  return (
+    <>
+      {segments.map((pos, i) => (
+        <TrackInstance key={i} position={pos} />
+      ))}
+    </>
   )
 }
 
@@ -56,7 +72,11 @@ export function Car() {
   useEffect(() => {
     scene.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
-        (child as THREE.Mesh).castShadow = true
+        const mesh = child as THREE.Mesh
+        mesh.castShadow = true
+        if (mesh.material instanceof THREE.MeshStandardMaterial) {
+          mesh.material.envMapIntensity = 0.5
+        }
       }
     })
   }, [scene])
@@ -89,9 +109,9 @@ export function Car() {
   return (
     <group ref={groupRef} scale={[0.5, 0.5, 0.5]}>
       <primitive object={scene} />
-      <pointLight color="#ff4400" intensity={6} distance={4} position={[0.5, 0.5, -1]} />
-      <pointLight color="#ff4400" intensity={6} distance={4} position={[-0.5, 0.5, -1]} />
-      <pointLight color="#ffffff" intensity={10} distance={8} position={[0, 0.5, 1]} />
+      <pointLight color="#ff6600" intensity={1.5} distance={3} position={[0.5, 0.3, -0.8]} />
+      <pointLight color="#ff6600" intensity={1.5} distance={3} position={[-0.5, 0.3, -0.8]} />
+      <pointLight color="#ffffff" intensity={3} distance={6} position={[0, 0.4, 0.8]} />
     </group>
   )
 }
@@ -99,9 +119,10 @@ export function Car() {
 export function NeonTrackLights() {
   return (
     <>
-      <pointLight color="#00ffff" intensity={12} distance={20} position={[3, 3, 0]} />
-      <pointLight color="#ff00aa" intensity={12} distance={20} position={[3, 3, -20]} />
-      <pointLight color="#7F77DD" intensity={10} distance={20} position={[3, 3, -40]} />
+      <pointLight color="#00ffff" intensity={10} distance={18} position={[3, 3, 0]} />
+      <pointLight color="#ff00aa" intensity={10} distance={18} position={[3, 3, -18]} />
+      <pointLight color="#7F77DD" intensity={8} distance={18} position={[3, 3, -36]} />
+      <pointLight color="#00ffff" intensity={8} distance={18} position={[3, 3, -52]} />
       <ambientLight intensity={0.06} />
     </>
   )

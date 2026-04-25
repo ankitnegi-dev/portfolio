@@ -109,9 +109,9 @@ export function Car() {
   return (
     <group ref={groupRef} scale={[0.5, 0.5, 0.5]}>
       <primitive object={scene} />
-      <pointLight color="#ff6600" intensity={1.5} distance={3} position={[0.5, 0.3, -0.8]} />
-      <pointLight color="#ff6600" intensity={1.5} distance={3} position={[-0.5, 0.3, -0.8]} />
-      <pointLight color="#ffffff" intensity={3} distance={6} position={[0, 0.4, 0.8]} />
+      <pointLight color="#ff6600" intensity={0.4} distance={2} position={[0.5, 0.3, -0.8]} />
+      <pointLight color="#ff6600" intensity={0.4} distance={2} position={[-0.5, 0.3, -0.8]} />
+      <pointLight color="#ffffff" intensity={1} distance={4} position={[0, 0.4, 0.8]} />
     </group>
   )
 }

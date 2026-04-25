@@ -39,37 +39,22 @@ const events = [
     color: '#ff00aa',
     icon: '⚡',
   },
-  {
-    date: 'Now',
-    title: 'Open to Opportunities',
-    desc: 'Seeking internships and part-time roles in AI/ML and full-stack',
-    color: '#00ffff',
-    icon: '🎯',
-  },
 ]
 
 export default function Timeline() {
   const [p, setP] = useState(0)
-  const [visible, setVisible] = useState(false)
   const rafRef = useRef<number>(0)
 
   useEffect(() => {
     const tick = () => {
-      const val = scrollProgress.current
-      setP(val)
+      setP(scrollProgress.current)
       rafRef.current = requestAnimationFrame(tick)
     }
     rafRef.current = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(rafRef.current)
   }, [])
 
-  useEffect(() => {
-    if (p >= 0.13 && p <= 0.28) {
-      setVisible(true)
-    } else {
-      setVisible(false)
-    }
-  }, [p])
+  const visible = p >= 0.13 && p <= 0.28
 
   return (
     <div style={{
@@ -77,74 +62,81 @@ export default function Timeline() {
       top: '50%',
       right: '5vw',
       transform: 'translateY(-50%)',
-      width: '280px',
+      width: '260px',
       opacity: visible ? 1 : 0,
       transition: 'opacity 0.7s ease',
       pointerEvents: 'none',
       zIndex: 10,
+      background: 'rgba(5,5,10,0.82)',
+      backdropFilter: 'blur(14px)',
+      WebkitBackdropFilter: 'blur(14px)',
+      border: '0.5px solid rgba(0,255,255,0.15)',
+      borderRadius: '16px',
+      padding: '18px 16px',
     }}>
       <p style={{
         fontFamily: 'monospace',
-        fontSize: '11px',
-        letterSpacing: '0.25em',
+        fontSize: '10px',
+        letterSpacing: '0.3em',
         color: '#00ffff',
-        marginBottom: '16px',
+        marginBottom: '14px',
         textTransform: 'uppercase',
-        opacity: 0.8,
       }}>Journey</p>
 
       <div style={{ position: 'relative' }}>
         <div style={{
           position: 'absolute',
-          left: '16px',
-          top: 0,
-          bottom: 0,
+          left: '15px',
+          top: '8px',
+          bottom: '8px',
           width: '1px',
-          background: 'linear-gradient(180deg, #00ffff22, #ff00aa22, #00ffff22)',
+          background: 'linear-gradient(180deg, rgba(0,255,255,0.3), rgba(255,0,170,0.3), rgba(0,255,255,0.1))',
         }} />
 
         {events.map((event, i) => (
           <div key={i} style={{
             display: 'flex',
-            gap: '14px',
-            marginBottom: '16px',
+            gap: '12px',
+            marginBottom: i === events.length - 1 ? 0 : '14px',
             animation: visible ? `slideIn 0.4s ease ${i * 0.08}s both` : 'none',
           }}>
             <div style={{
-              width: '32px',
-              height: '32px',
+              width: '30px',
+              height: '30px',
               borderRadius: '50%',
-              background: 'rgba(5,5,10,0.9)',
-              border: '0.5px solid ' + event.color + '66',
+              background: 'rgba(10,10,20,0.95)',
+              border: '0.5px solid ' + event.color + '80',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '14px',
+              fontSize: '13px',
               flexShrink: 0,
-              boxShadow: '0 0 8px ' + event.color + '33',
+              boxShadow: '0 0 10px ' + event.color + '40',
             }}>
               {event.icon}
             </div>
-            <div style={{ paddingTop: '4px' }}>
+            <div style={{ paddingTop: '3px' }}>
               <p style={{
                 fontFamily: 'monospace',
                 fontSize: '9px',
                 color: event.color,
-                letterSpacing: '0.15em',
+                letterSpacing: '0.12em',
                 marginBottom: '2px',
-                opacity: 0.8,
+                fontWeight: 600,
               }}>{event.date}</p>
               <p style={{
                 fontSize: '12px',
-                fontWeight: 600,
+                fontWeight: 700,
                 color: '#ffffff',
                 marginBottom: '2px',
                 lineHeight: 1.3,
+                textShadow: '0 1px 8px rgba(0,0,0,0.8)',
               }}>{event.title}</p>
               <p style={{
-                fontSize: '11px',
-                color: 'rgba(255,255,255,0.4)',
+                fontSize: '10px',
+                color: 'rgba(255,255,255,0.65)',
                 lineHeight: 1.5,
+                textShadow: '0 1px 6px rgba(0,0,0,0.9)',
               }}>{event.desc}</p>
             </div>
           </div>
@@ -153,7 +145,7 @@ export default function Timeline() {
 
       <style>{`
         @keyframes slideIn {
-          from { opacity: 0; transform: translateX(20px); }
+          from { opacity: 0; transform: translateX(16px); }
           to { opacity: 1; transform: translateX(0); }
         }
       `}</style>

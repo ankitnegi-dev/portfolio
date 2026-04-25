@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
-const baseUrl = 'https://portfolio-nu-amber-sg31cyo8d3.vercel.app'
+const baseUrl = 'https://ankitnegi-portfolio.vercel.app'
 
 export const metadata: Metadata = {
   title: 'Ankit Negi — Full Stack Developer & AI Engineer',

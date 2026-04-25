@@ -9,7 +9,7 @@
 
 > A production-grade 3D portfolio built with Next.js, React Three Fiber, and GSAP — featuring a neon racing track environment, scroll-driven camera, AI chat assistant, and full case study pages.
 
-**[Live Demo](https://portfolio-nu-amber-sg31cyo8d3.vercel.app)** · **[LinkedIn](https://www.linkedin.com/in/ankit-negi-2aa98232a)** · **[Twitter](https://x.com/ankit_07_negi)**
+**[Live Demo](https://ankitnegi-portfolio.vercel.app)** · **[LinkedIn](https://www.linkedin.com/in/ankit-negi-2aa98232a)** · **[Twitter](https://x.com/ankit_07_negi)**
 
 ---
 

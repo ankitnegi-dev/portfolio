@@ -29,7 +29,7 @@ export default function SpotifyWidget() {
         .catch(() => {})
     }
     fetch_()
-    const interval = setInterval(fetch_, 30000)
+    const interval = setInterval(fetch_, 60000)
     return () => clearInterval(interval)
   }, [])
 

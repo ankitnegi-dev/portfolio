@@ -2,7 +2,6 @@
 
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { Environment, ScrollControls, useScroll } from '@react-three/drei'
-import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing'
 import { Suspense, useRef, useEffect } from 'react'
 import * as THREE from 'three'
 import { Track, Car, NeonTrackLights } from './F1Scene'
@@ -62,15 +61,6 @@ function ScrollCapture() {
   return null
 }
 
-function Effects() {
-  return (
-    <EffectComposer>
-      <Bloom intensity={1.8} luminanceThreshold={0.1} luminanceSmoothing={0.9} mipmapBlur />
-      <Vignette eskil={false} offset={0.3} darkness={0.9} />
-    </EffectComposer>
-  )
-}
-
 function SceneContents() {
   return (
     <>
@@ -84,7 +74,6 @@ function SceneContents() {
       <ScrollCapture />
       <NeonTrackLights />
       <Environment preset="night" />
-      <Effects />
     </>
   )
 }

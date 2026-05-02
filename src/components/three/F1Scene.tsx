@@ -7,15 +7,15 @@ import * as THREE from 'three'
 import { scrollProgress } from '@/lib/scrollStore'
 
 const CAR_PATH = new THREE.CatmullRomCurve3([
-  new THREE.Vector3(3, 0.2, 7),
-  new THREE.Vector3(3, 0.2, 3),
-  new THREE.Vector3(3, 0.2, -1),
-  new THREE.Vector3(3, 0.2, -7),
-  new THREE.Vector3(4, 0.2, -15),
-  new THREE.Vector3(4, 0.2, -23),
-  new THREE.Vector3(3, 0.2, -33),
-  new THREE.Vector3(3, 0.2, -43),
-  new THREE.Vector3(3, 0.2, -53),
+  new THREE.Vector3(0, 0.2, 7),
+  new THREE.Vector3(0, 0.2, 3),
+  new THREE.Vector3(0, 0.2, -1),
+  new THREE.Vector3(0, 0.2, -7),
+  new THREE.Vector3(0, 0.2, -15),
+  new THREE.Vector3(0, 0.2, -23),
+  new THREE.Vector3(0, 0.2, -33),
+  new THREE.Vector3(0, 0.2, -43),
+  new THREE.Vector3(0, 0.2, -53),
 ])
 
 function TrackInstance({ position }: { position: [number, number, number] }) {
@@ -48,11 +48,11 @@ function TrackInstance({ position }: { position: [number, number, number] }) {
 
 export function Track() {
   const segments: [number, number, number][] = [
-    [3, -0.5, 5],
-    [3, -0.5, -10],
-    [3, -0.5, -25],
-    [3, -0.5, -40],
-    [3, -0.5, -55],
+    [0, -0.5, 5],
+    [0, -0.5, -10],
+    [0, -0.5, -25],
+    [0, -0.5, -40],
+    [0, -0.5, -55],
   ]
 
   return (
@@ -119,10 +119,10 @@ export function Car() {
 export function NeonTrackLights() {
   return (
     <>
-      <pointLight color="#00ffff" intensity={10} distance={18} position={[3, 3, 0]} />
-      <pointLight color="#ff00aa" intensity={10} distance={18} position={[3, 3, -18]} />
-      <pointLight color="#7F77DD" intensity={8} distance={18} position={[3, 3, -36]} />
-      <pointLight color="#00ffff" intensity={8} distance={18} position={[3, 3, -52]} />
+      <pointLight color="#00ffff" intensity={10} distance={18} position={[0, 3, 0]} />
+      <pointLight color="#ff00aa" intensity={10} distance={18} position={[0, 3, -18]} />
+      <pointLight color="#7F77DD" intensity={8} distance={18} position={[0, 3, -36]} />
+      <pointLight color="#00ffff" intensity={8} distance={18} position={[0, 3, -52]} />
       <ambientLight intensity={0.06} />
     </>
   )

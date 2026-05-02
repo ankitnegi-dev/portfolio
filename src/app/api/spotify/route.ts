@@ -14,7 +14,7 @@ async function getAccessToken() {
 
   if (!clientId || !clientSecret || !refreshToken) return null
 
-  const basic = Buffer.from(clientId + ':' + clientSecret).toString('base64')
+  const basic = btoa(clientId + ':' + clientSecret)
   const res = await fetch(TOKEN_URL, {
     method: 'POST',
     headers: {

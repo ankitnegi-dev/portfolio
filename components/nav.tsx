@@ -9,14 +9,14 @@ const links = [
 export function Nav() {
   return (
     <header className="border-b border-[var(--border)]">
-      <nav className="max-w-4xl mx-auto flex items-center justify-between px-6 py-5">
+      <nav className="max-w-4xl mx-auto flex items-center justify-between px-4 sm:px-6 py-5">
         <Link
           href="/"
           className="font-mono text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
         >
           ankit.dev
         </Link>
-        <ul className="flex items-center gap-6">
+        <ul className="flex items-center gap-4 sm:gap-6">
           {links.map((link) => (
             <li key={link.href}>
               <Link

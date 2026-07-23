@@ -22,7 +22,7 @@ export const projects: Project[] = [
     icon: "network",
     featured: true,
     links: {
-      github: "",
+      github: "https://github.com/ankitnegi-dev/Techdesk-ai-social-agent",
     },
   },
   {
@@ -34,7 +34,7 @@ export const projects: Project[] = [
     icon: "file-search",
     featured: true,
     links: {
-      demo: "",
+      demo: "https://doc-intel-mu.vercel.app/",
     },
   },
   {
@@ -46,7 +46,7 @@ export const projects: Project[] = [
     icon: "sword",
     featured: true,
     links: {
-      demo: "",
+      demo: "https://dungeon-master-kappa.vercel.app/",
     },
   },
 ];

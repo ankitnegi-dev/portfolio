@@ -1,7 +1,7 @@
 import { Avatar } from "@/components/avatar";
 
 export const metadata = {
-  title: "About — Ankit Negi",
+  title: "About  Ankit Negi",
 };
 
 export default function AboutPage() {
@@ -23,7 +23,7 @@ export default function AboutPage() {
             I&apos;m a Computer Science undergrad at IIITDM Chennai,
             currently in a dual-degree (B.Tech + M.Tech) program running
             2024–2029. Most of what I build sits at the intersection of
-            full-stack engineering and AI agent systems — orchestrating
+            full-stack engineering and AI agent systems  orchestrating
             LLMs to actually do useful, structured work instead of just
             answering questions.
           </p>
@@ -32,13 +32,13 @@ export default function AboutPage() {
             backend, Node.js and FastAPI, with Postgres and pgvector for
             anything that needs retrieval. For AI systems specifically, I
             use LangGraph for multi-agent orchestration, Kafka for event
-            streaming between agents, and Redis when I need fast state —
+            streaming between agents, and Redis when I need fast state 
             like the contextual bandit tracker I built for TechDesk AI to
             self-improve its replies over time.
           </p>
           <p>
             Outside of coursework, I&apos;ve built and shipped projects at
-            hackathons — FoodBridge at Vashisht Hackathon 3.0 in the
+            hackathons  FoodBridge at Vashisht Hackathon 3.0 in the
             EcoTech track, and MediScan AI for the Amazon Nova AI
             Hackathon, exploring multimodal AI for healthcare.
           </p>

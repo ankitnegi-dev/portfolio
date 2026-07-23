@@ -1,4 +1,5 @@
 import { ProjectCard } from "@/components/project-card";
+import { FadeIn } from "@/components/animated/fade-in";
 import type { Project } from "@/lib/projects";
 
 export function ProjectGrid({
@@ -16,8 +17,10 @@ export function ProjectGrid({
         </h2>
       )}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {projects.map((project) => (
-          <ProjectCard key={project.slug} project={project} />
+        {projects.map((project, i) => (
+          <FadeIn key={project.slug} delay={i * 0.06}>
+            <ProjectCard project={project} />
+          </FadeIn>
         ))}
       </div>
     </section>

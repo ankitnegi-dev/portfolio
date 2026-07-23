@@ -22,9 +22,16 @@ function formatDate(date: string) {
   return year;
 }
 
-export function ProjectCard({ project }: { project: Project }) {
+export function ProjectCard({
+  project,
+  href,
+}: {
+  project: Project;
+  href: string;
+}) {
   const shouldReduceMotion = useReducedMotion();
   const IconComponent = iconMap[project.icon] ?? IconApps;
+  const isExternal = href.startsWith("http");
 
   return (
     <motion.div
@@ -32,7 +39,9 @@ export function ProjectCard({ project }: { project: Project }) {
       transition={{ duration: 0.18, ease: "easeOut" }}
     >
       <Link
-        href={`/projects/${project.slug}`}
+        href={href}
+        target={isExternal ? "_blank" : undefined}
+        rel={isExternal ? "noopener noreferrer" : undefined}
         className="group block rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-1)] p-5 transition-colors hover:border-[var(--accent)]"
       >
         <div className="flex items-start justify-between mb-3">

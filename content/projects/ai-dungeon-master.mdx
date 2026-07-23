@@ -1,0 +1,31 @@
+---
+summary: A full-stack AI text adventure that narrates in real time, sees the world through your camera, and turns your playthrough into a storybook.
+metrics:
+  - "Low-latency streaming narration via Groq + Llama 3.3 70B"
+  - "Real-world object recognition via Llama 4 Scout 17B"
+  - "Per-action scene generation with FLUX.1-schnell"
+---
+
+## The idea
+
+Text adventures live or die on how fast the story responds to you. A three-second wait after every choice kills immersion. AI Dungeon Master was built around low-latency streaming narration first - everything else was designed around keeping that fast.
+
+## Narration
+
+Story text streams token-by-token over **Server-Sent Events**, powered by the **Groq API running Llama 3.3 70B** - Groq's inference speed is what makes the narration feel closer to a live dungeon master typing in real time than a chatbot generating a paragraph and dumping it all at once.
+
+## Seeing the real world
+
+The more unusual piece: the game can use your **camera to recognize physical objects around you** via **Llama 4 Scout 17B**, then weave whatever it sees into the fantasy narrative. Point it at a coffee mug mid-game and the story can turn it into an ancient relic - the world reacts to what's actually in front of you, not just what you type.
+
+## Making it visual and sayable
+
+Each action generates a matching **AI scene image** through **Hugging Face's FLUX.1-schnell**, so the adventure isn't just text - it has a visual record as you go. **Voice input via the Web Speech API** means you can speak your actions instead of typing them, which matters more than it sounds like for keeping the pace of a live session.
+
+## Taking it with you
+
+At the end of a session, the whole playthrough - narration and generated scenes - exports as a **storybook PDF via jsPDF**, so a run through the game becomes something you actually keep, not something that disappears when you close the tab.
+
+## What I'd build next
+
+Persistent world state across sessions - right now each playthrough is self-contained; carrying consequences and relationships forward into a new session is the obvious next layer.

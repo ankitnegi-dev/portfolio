@@ -1,6 +1,12 @@
 import { ProjectCard } from "@/components/project-card";
 import { FadeIn } from "@/components/animated/fade-in";
+import { hasCaseStudy } from "@/lib/mdx";
 import type { Project } from "@/lib/projects";
+
+function resolveHref(project: Project): string {
+  if (hasCaseStudy(project.slug)) return `/projects/${project.slug}`;
+  return project.links.demo || project.links.github || `/projects/${project.slug}`;
+}
 
 export function ProjectGrid({
   projects,
@@ -19,7 +25,7 @@ export function ProjectGrid({
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {projects.map((project, i) => (
           <FadeIn key={project.slug} delay={i * 0.06}>
-            <ProjectCard project={project} />
+            <ProjectCard project={project} href={resolveHref(project)} />
           </FadeIn>
         ))}
       </div>

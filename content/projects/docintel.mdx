@@ -1,0 +1,33 @@
+---
+summary: A multi-agent swarm that monitors social media and drafts replies, with a human always in the loop before anything goes out.
+metrics:
+  - "Multi-agent orchestration via LangGraph"
+  - "Kafka event streaming with full audit trail"
+  - "Self-improving replies via RLHF + contextual bandit"
+---
+
+## The problem
+
+Most "AI social media" tools either post without oversight or require someone to manually watch every mention. Neither scales. TechDesk AI was built to sit in between: agents do the watching, drafting, and prioritizing, but nothing ships without a human approving it first.
+
+## Architecture
+
+The system runs as a swarm of cooperating agents orchestrated with **LangGraph**, backed by **Llama 3.3 70B** for reasoning and drafting. Each agent has a narrow job - one listens for relevant mentions, another drafts a response, another decides what needs a human's attention right now versus what can wait.
+
+Agents don't talk to each other directly. Every interaction goes through **Apache Kafka**, which gives the system two things most agent demos skip: a durable, append-only audit trail of every decision an agent made, and the ability to add or restart individual agents without taking the whole system down.
+
+## Retrieval and context
+
+Replies aren't generated from nothing - a **RAG pipeline over PostgreSQL with pgvector** gives agents relevant context (prior conversations, brand voice examples, past resolutions) before they draft anything. This is what keeps drafts from sounding generic.
+
+## Human-in-the-loop
+
+A **FastAPI + WebSocket dashboard** streams drafted replies to a human reviewer in real time. Nothing is posted without explicit approval - the system's job is to remove the busywork of monitoring and drafting, not the judgment call of what actually gets said publicly.
+
+## Getting better over time
+
+Every approval, edit, or rejection a human makes is captured as a preference signal. A **contextual bandit strategy tracker in Redis** uses that signal to shift which drafting strategies get used more often - so the system's suggestions get closer to what a human would actually approve, without retraining a model from scratch.
+
+## What I'd build next
+
+The natural next step is letting the bandit tracker reason about *why* a draft got rejected, not just that it did - right now it optimizes on the outcome, not the cause.

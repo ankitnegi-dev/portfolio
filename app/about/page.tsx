@@ -1,4 +1,6 @@
 import { Avatar } from "@/components/avatar";
+import { Timeline } from "@/components/timeline";
+import { SkillsGrid } from "@/components/skills-grid";
 
 export const metadata = {
   title: "About - Ankit Negi",
@@ -9,20 +11,20 @@ export default function AboutPage() {
     <main className="flex-1">
       <div className="max-w-2xl mx-auto px-6 pt-16 pb-20">
         <div className="flex items-center gap-5 mb-8">
-          <Avatar size={200} />
+          <Avatar size={250} />
           <div>
-            <h1 className="font-display text-3xl font-semibold">About</h1>
-            <p className="font-mono text-xs text-[var(--text-muted)] mt-1">
+            <h1 className="font-display text-4xl font-semibold">About</h1>
+            <p className="font-mono text-2xs text-[var(--text-muted)] mt-1">
               Ankit Negi
             </p>
           </div>
         </div>
 
-        <div className="space-y-4 text-[var(--text-secondary)] text-sm leading-relaxed">
+        <div className="space-y-4 text-[var(--text-secondary)] text-sm leading-relaxed mb-12">
           <p>
             I&apos;m a Computer Science undergrad at IIITDM Chennai,
             currently in a dual-degree (B.Tech + M.Tech) program running
-            2024–2029. Most of what I build sits at the intersection of
+            2024-2029. Most of what I build sits at the intersection of
             full-stack engineering and AI agent systems - orchestrating
             LLMs to actually do useful, structured work instead of just
             answering questions.
@@ -36,23 +38,21 @@ export default function AboutPage() {
             like the contextual bandit tracker I built for TechDesk AI to
             self-improve its replies over time.
           </p>
-          <p>
-            Outside of coursework, I&apos;ve built and shipped projects at
-            hackathons - FoodBridge at Vashisht Hackathon 3.0 in the
-            EcoTech track, and MediScan AI for the Amazon Nova AI
-            Hackathon, exploring multimodal AI for healthcare.
-          </p>
         </div>
 
-        <div className="mt-10 pt-6 border-t border-[var(--border)]">
-          <p className="font-mono text-xs text-[var(--text-muted)] uppercase tracking-wide mb-3">
-            Currently working with
+        <section className="mb-12">
+          <p className="font-mono text-xs text-[var(--text-muted)] uppercase tracking-wide mb-5">
+            Timeline
           </p>
-          <p className="font-mono text-xs text-[var(--text-secondary)] leading-relaxed">
-            Python · TypeScript · React · Next.js · FastAPI · LangGraph ·
-            Kafka · PostgreSQL · Docker · AWS
+          <Timeline />
+        </section>
+
+        <section>
+          <p className="font-mono text-xs text-[var(--text-muted)] uppercase tracking-wide mb-5">
+            Skills
           </p>
-        </div>
+          <SkillsGrid />
+        </section>
       </div>
     </main>
   );

@@ -1,3 +1,5 @@
+import { IconDownload } from "@tabler/icons-react";
+
 export const metadata = {
   title: "Contact - Ankit Negi",
 };
@@ -12,15 +14,25 @@ export default function ContactPage() {
   return (
     <main className="flex-1">
       <div className="max-w-2xl mx-auto px-6 pt-16 pb-20">
+        <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] px-3 py-1 mb-5">
+          <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
+          <span className="font-mono text-xs text-[var(--text-secondary)]">
+            open to internships · available now
+          </span>
+        </div>
+
         <h1 className="font-display text-3xl font-semibold mb-3">
           Get in touch
         </h1>
-        <p className="text-[var(--text-secondary)] text-sm mb-10 max-w-md">
+        <p className="text-[var(--text-secondary)] text-sm mb-1 max-w-md">
           Open to internships, collaborations, and interesting problems.
           Email is the fastest way to reach me.
         </p>
+        <p className="font-mono text-xs text-[var(--text-muted)] mb-10">
+          usually replies within 24 hours
+        </p>
 
-        <div className="space-y-1">
+        <div className="space-y-1 mb-6">
           {links.map((link) => (
             <a
               key={link.label}
@@ -42,6 +54,15 @@ export default function ContactPage() {
             </a>
           ))}
         </div>
+
+        <a
+          href="/resume.pdf"
+          download
+          className="inline-flex items-center gap-2 font-mono text-xs text-[var(--text-secondary)] hover:text-[var(--accent)] transition-colors"
+        >
+          <IconDownload size={14} stroke={1.5} />
+          download resume (pdf)
+        </a>
       </div>
     </main>
   );

@@ -1,11 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Space_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
-import "./globals.css";
 import { AssistantWidget } from "@/components/assistant-widget";
-
-
+import { SITE_URL } from "@/lib/site";
+import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
@@ -24,10 +23,34 @@ const jetbrainsMono = JetBrains_Mono({
   weight: ["400", "500"],
 });
 
+const title = "Ankit Negi — Full-Stack Developer & AI Engineer";
+const description =
+  "Full-stack developer and AI engineer building multi-agent systems, RAG pipelines, and production-grade web applications.";
+
 export const metadata: Metadata = {
-  title: "Ankit Negi - Full-Stack Developer & AI Engineer",
-  description:
-    "Full-stack developer and AI engineer building multi-agent systems, RAG pipelines, and production-grade web applications.",
+  metadataBase: new URL(SITE_URL),
+  title,
+  description,
+  openGraph: {
+    title,
+    description,
+    url: SITE_URL,
+    siteName: "Ankit Negi",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0b0e11",
 };
 
 export default function RootLayout({
@@ -44,7 +67,7 @@ export default function RootLayout({
         <Nav />
         {children}
         <Footer />
-         <AssistantWidget />
+        <AssistantWidget />
       </body>
     </html>
   );

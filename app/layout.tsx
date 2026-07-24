@@ -3,6 +3,9 @@ import { Space_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
 import "./globals.css";
+import { AssistantWidget } from "@/components/assistant-widget";
+
+
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
@@ -41,6 +44,7 @@ export default function RootLayout({
         <Nav />
         {children}
         <Footer />
+         <AssistantWidget />
       </body>
     </html>
   );

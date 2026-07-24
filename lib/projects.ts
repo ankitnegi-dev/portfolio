@@ -35,6 +35,7 @@ export const projects: Project[] = [
     featured: true,
     links: {
       demo: "https://doc-intel-mu.vercel.app/",
+      github: "https://github.com/ankitnegi-dev/DocIntel",
     },
   },
   {
@@ -47,6 +48,7 @@ export const projects: Project[] = [
     featured: true,
     links: {
       demo: "https://dungeon-master-kappa.vercel.app/",
+      github: "https://github.com/ankitnegi-dev/dungeon-master",
     },
   },
 ];

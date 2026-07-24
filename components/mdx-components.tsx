@@ -1,6 +1,8 @@
 import type { MDXComponents } from "mdx/types";
+import { AgentGraph3D } from "@/components/agent-graph-3d";
 
 export const mdxComponents: MDXComponents = {
+  AgentGraph3D,
   h2: (props) => (
     <h2
       className="font-display text-xl font-semibold mt-10 mb-3 first:mt-0"

@@ -16,6 +16,8 @@ The system runs as a swarm of cooperating agents orchestrated with **LangGraph**
 
 Agents don't talk to each other directly. Every interaction goes through **Apache Kafka**, which gives the system two things most agent demos skip: a durable, append-only audit trail of every decision an agent made, and the ability to add or restart individual agents without taking the whole system down.
 
+<AgentGraph3D />
+
 ## Retrieval and context
 
 Replies aren't generated from nothing - a **RAG pipeline over PostgreSQL with pgvector** gives agents relevant context (prior conversations, brand voice examples, past resolutions) before they draft anything. This is what keeps drafts from sounding generic.

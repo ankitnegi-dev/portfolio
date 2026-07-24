@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Space_Grotesk, Inter, JetBrains_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
 import { AssistantWidget } from "@/components/assistant-widget";
@@ -53,6 +54,31 @@ export const viewport: Viewport = {
   themeColor: "#0b0e11",
 };
 
+const personJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  name: "Ankit Negi",
+  url: SITE_URL,
+  jobTitle: "Full-Stack Developer & AI Engineer",
+  alumniOf: {
+    "@type": "CollegeOrUniversity",
+    name: "Indian Institute of Information Technology, Design and Manufacturing (IIITDM), Chennai",
+  },
+  knowsAbout: [
+    "Full-Stack Development",
+    "React",
+    "Next.js",
+    "Python",
+    "LangGraph",
+    "Multi-Agent Systems",
+    "RAG",
+  ],
+  sameAs: [
+    "https://github.com/ankitnegi-dev",
+    "https://linkedin.com/in/ankit-negi-2aa98232a",
+  ],
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -64,10 +90,15 @@ export default function RootLayout({
       className={`${spaceGrotesk.variable} ${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-[var(--bg)] text-[var(--text-primary)]">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
+        />
         <Nav />
         {children}
         <Footer />
         <AssistantWidget />
+        <Analytics />
       </body>
     </html>
   );

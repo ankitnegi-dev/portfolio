@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Ankit Negi - Portfolio
 
-## Getting Started
+![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
+![Framer Motion](https://img.shields.io/badge/Framer_Motion-0055FF?style=for-the-badge&logo=framer&logoColor=white)
+![Three.js](https://img.shields.io/badge/Three.js-000000?style=for-the-badge&logo=threedotjs&logoColor=white)
+![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)
 
-First, run the development server:
+Personal portfolio built with Next.js, TypeScript, and Tailwind CSS. Live at [portfolio-inky-delta-25cipm8ebc.vercel.app](https://portfolio-inky-delta-25cipm8ebc.vercel.app).
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Features
+
+- **Dark "engineering console" theme** - custom design tokens, Space Grotesk / Inter / JetBrains Mono type system
+- **MDX case studies** - deep-dive write-ups for flagship projects, rendered from `content/projects/*.mdx`, with an optional-by-default workflow: projects without a case study link straight to their live demo/GitHub instead
+- **3D agent architecture graph** - an interactive Three.js / React Three Fiber visualization embedded in the TechDesk AI case study, lazy-loaded via `IntersectionObserver` so it only costs anything once scrolled into view
+- **AI assistant widget** - a chat widget grounded in this site's actual content, backed by a separate FastAPI service (see [`/backend`](./backend)) calling the Groq API
+- **Framer Motion throughout** - staggered hero entrance, scroll-reveal on cards, hover interactions, page transitions - all respecting `prefers-reduced-motion`
+- **Full SEO/metadata pass** - dynamic OG image generation, JSON-LD Person schema, sitemap, robots.txt
+- **Lighthouse: 96 Performance / 100 Accessibility / 100 Best Practices / 100 SEO** (tested on the heaviest page, throttled mobile emulation)
+
+## Tech stack
+
+**Frontend:** Next.js 16 (App Router), TypeScript, Tailwind CSS, Framer Motion, React Three Fiber + Drei
+**Content:** MDX via `next-mdx-remote`, `gray-matter` for frontmatter
+**Backend:** FastAPI, Groq API (see [`/backend/README.md`](./backend/README.md) for setup)
+**Deployment:** Vercel (frontend), Render (backend)
+
+## Project structure
+
+```
+app/                  routes (App Router)
+├── projects/[slug]/  dynamic case study pages
+├── api/chat/         proxy route to the FastAPI backend
+components/           UI components
+├── animated/         reusable Framer Motion wrappers
+content/projects/     MDX case study source files
+lib/                  project data, MDX loader, site config
+backend/              separate FastAPI service for the AI assistant
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Local setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Open [http://localhost:3000](http://localhost:3000).
 
-## Learn More
+To run the AI assistant locally, also start the backend - see [`backend/README.md`](./backend/README.md). Without it, the chat widget still works and returns a graceful fallback message.
 
-To learn more about Next.js, take a look at the following resources:
+### Environment variables
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Copy `.env.local.example` to `.env.local`:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+RAG_API_URL=          # URL of the deployed/local FastAPI backend
+NEXT_PUBLIC_SITE_URL=  # used for sitemap, robots.txt, and OG tags
+```
 
-## Deploy on Vercel
+## Adding a new project
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Add an entry to `lib/projects.ts`. That's it - it'll appear on the home and work pages automatically. If you also want a full case study, add a matching `content/projects/<slug>.mdx` file; without one, the project card links straight to its `demo` or `github` URL instead.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## License
+
+Personal project - feel free to reference the code, but please don't republish it as your own portfolio.

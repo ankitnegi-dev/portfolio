@@ -1,8 +1,13 @@
 # Portfolio Assistant - FastAPI backend
 
+![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![Groq](https://img.shields.io/badge/Groq-F55036?style=for-the-badge)
+![Render](https://img.shields.io/badge/Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)
+
 A small RAG-style backend for the "ask about Ankit" chat widget on the
 portfolio site. Currently a simple prompt + static-context implementation
-(see `context.py`) - no vector DB yet, per the Phase 5 plan. Upgrade to real
+(see `context.py`) - no vector DB yet. Upgrade to real
 retrieval later if the content outgrows a single context file.
 
 ## Run locally

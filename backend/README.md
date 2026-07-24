@@ -1,8 +1,8 @@
-# Portfolio Assistant — FastAPI backend
+# Portfolio Assistant - FastAPI backend
 
 A small RAG-style backend for the "ask about Ankit" chat widget on the
 portfolio site. Currently a simple prompt + static-context implementation
-(see `context.py`) — no vector DB yet, per the Phase 5 plan. Upgrade to real
+(see `context.py`) - no vector DB yet, per the Phase 5 plan. Upgrade to real
 retrieval later if the content outgrows a single context file.
 
 ## Run locally
@@ -36,6 +36,6 @@ curl -X POST http://localhost:8000/chat \
 
 ## Note on cold starts
 
-Render's free tier spins down after inactivity — the first request after
+Render's free tier spins down after inactivity - the first request after
 idle can take several seconds. The chat widget on the frontend already
 accounts for this with a "waking up…" state.

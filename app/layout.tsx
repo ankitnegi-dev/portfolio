@@ -23,7 +23,7 @@ const jetbrainsMono = JetBrains_Mono({
   weight: ["400", "500"],
 });
 
-const title = "Ankit Negi — Full-Stack Developer & AI Engineer";
+const title = "Ankit Negi - Full-Stack Developer & AI Engineer";
 const description =
   "Full-stack developer and AI engineer building multi-agent systems, RAG pipelines, and production-grade web applications.";
 

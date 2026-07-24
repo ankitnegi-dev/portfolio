@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
         message: body.message,
         history: body.history ?? [],
       }),
-      // Render free tier can cold-start slowly — give it real time.
+      // Render free tier can cold-start slowly - give it real time.
       signal: AbortSignal.timeout(45_000),
     });
 
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         reply:
-          "Couldn't reach the assistant backend — it may be waking up from idle. Try again in a few seconds.",
+          "Couldn't reach the assistant backend - it may be waking up from idle. Try again in a few seconds.",
       },
       { status: 200 }
     );

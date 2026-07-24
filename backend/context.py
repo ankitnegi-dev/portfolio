@@ -1,14 +1,14 @@
 """
 Static context the assistant grounds its answers in.
 
-This is the simple "prompt + context" version referenced in the roadmap —
+This is the simple "prompt + context" version referenced in the roadmap -
 no embeddings or vector DB yet. If the site grows enough content that this
 becomes unwieldy, upgrade to real retrieval (pgvector, like DocIntel) instead
 of enlarging this file indefinitely.
 """
 
 PROFILE = """
-Ankit Negi — Full-Stack Developer & AI Engineer.
+Ankit Negi - Full-Stack Developer & AI Engineer.
 Dual-degree (B.Tech + M.Tech) Computer Science student at IIITDM Chennai, 2024-2029.
 Specializes in full-stack web apps (React, Next.js, Node.js) and AI agent systems
 (multi-agent orchestration, RAG pipelines, event streaming).
@@ -17,7 +17,7 @@ linkedin.com/in/ankit-negi-2aa98232a
 """
 
 PROJECTS = """
-1. TechDesk AI (April 2026) — Industry-grade AI social agent.
+1. TechDesk AI (April 2026) - Industry-grade AI social agent.
    Stack: Python, LangGraph, Kafka, Redis, FastAPI.
    A multi-agent swarm (LangGraph + Llama 3.3 70B) that monitors social media,
    drafts replies, and routes them through a human-in-the-loop FastAPI +
@@ -26,17 +26,17 @@ PROJECTS = """
    pgvector for context, and a Redis-backed contextual bandit tracker with
    RLHF preference collection so replies improve over time.
 
-2. DocIntel (June 2026) — Document Intelligence & Agentic RAG Platform.
+2. DocIntel (June 2026) - Document Intelligence & Agentic RAG Platform.
    Stack: Next.js, FastAPI, ChromaDB, Postgres.
    Parses scanned/digital PDFs (OCR + table extraction), classifies documents
    via LLM, and answers questions with inline page-level citations. Uses
-   hybrid retrieval — vector search (ChromaDB/Chroma Cloud) + BM25 keyword
-   search combined via Reciprocal Rank Fusion — plus cross-encoder
+   hybrid retrieval - vector search (ChromaDB/Chroma Cloud) + BM25 keyword
+   search combined via Reciprocal Rank Fusion - plus cross-encoder
    re-ranking. Containerized with Docker/docker-compose, deployed across
    Render, Vercel, and Chroma Cloud with streaming SSE chat responses.
    Live demo: https://doc-intel-mu.vercel.app/
 
-3. AI Dungeon Master (February 2026) — full-stack AI text adventure.
+3. AI Dungeon Master (February 2026) - full-stack AI text adventure.
    Stack: Next.js 16, TypeScript, Groq API, FLUX.1.
    Low-latency streaming narration via Groq running Llama 3.3 70B over
    Server-Sent Events. Uses Llama 4 Scout 17B for real-world object

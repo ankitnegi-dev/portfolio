@@ -1,21 +1,25 @@
-import { ProjectGrid } from "@/components/project-grid";
+import { WorkPageContent } from "@/components/work-page-content";
 import { projects } from "@/lib/projects";
+import { hasCaseStudy } from "@/lib/mdx";
 
 export const metadata = {
   title: "Work - Ankit Negi",
 };
 
+function resolveHref(project: (typeof projects)[number]): string {
+  if (hasCaseStudy(project.slug)) return `/projects/${project.slug}`;
+  return project.links.demo || project.links.github || `/projects/${project.slug}`;
+}
+
 export default function ProjectsPage() {
+  const items = projects.map((project) => ({
+    project,
+    href: resolveHref(project),
+  }));
+
   return (
     <main className="flex-1">
-      <div className="max-w-4xl mx-auto px-6 pt-16 pb-8">
-        <h1 className="font-display text-3xl font-semibold mb-2">Work</h1>
-        <p className="text-[var(--text-secondary)] text-sm">
-          A running log of what I&apos;ve built - mostly AI agent systems
-          and full-stack apps.
-        </p>
-      </div>
-      <ProjectGrid projects={projects} />
+      <WorkPageContent items={items} />
     </main>
   );
 }

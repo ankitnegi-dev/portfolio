@@ -1,10 +1,34 @@
 """
-Static context the assistant grounds its answers in.
+Assistant context.
 
-This is the simple "prompt + context" version referenced in the roadmap -
-no embeddings or vector DB yet. If the site grows enough content that this
-becomes unwieldy, upgrade to real retrieval (pgvector, like DocIntel) instead
-of enlarging this file indefinitely.
+PROJECTS is no longer hand-typed here - it's fetched live from the
+Next.js app's /api/context route, which reads directly from
+lib/projects.ts and the MDX case studies. That's the single source of
+truth for project data; this file never needs manual updates when a
+project is added or edited on the frontend.
+
+PROFILE / SKILLS / ACHIEVEMENTS stay static here since nothing else in
+the codebase duplicates them yet - if that changes, apply the same
+fetch-from-frontend pattern to those too.
+"""
+
+import os
+import time
+
+import httpx
+
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "").rstrip("/")
+CACHE_TTL_SECONDS = 600  # 10 minutes
+
+_cache: dict = {"text": None, "fetched_at": 0.0}
+
+# Only used if the live endpoint is unreachable (frontend down, network
+# issue, FRONTEND_URL unset). Intentionally minimal - this is a safety
+# net, not something you need to keep in sync.
+FALLBACK_PROJECTS = """
+(Live project data is temporarily unavailable. Ankit has built several
+AI agent systems and full-stack web apps - direct the visitor to
+ankit-negi.is-a.dev/projects for the current list.)
 """
 
 PROFILE = """
@@ -14,49 +38,6 @@ Specializes in full-stack web apps (React, Next.js, Node.js) and AI agent system
 (multi-agent orchestration, RAG pipelines, event streaming).
 Contact: ank12it11@gmail.com, github.com/ankitnegi-dev,
 linkedin.com/in/ankit-negi-2aa98232a
-"""
-
-PROJECTS = """
-1. TechDesk AI (April 2026) - Industry-grade AI social agent.
-   Stack: Python, LangGraph, Kafka, Redis, FastAPI.
-   A multi-agent swarm (LangGraph + Llama 3.3 70B) that monitors social media,
-   drafts replies, and routes them through a human-in-the-loop FastAPI +
-   WebSocket dashboard before anything is posted. Uses Apache Kafka for
-   event streaming with a full audit trail, a RAG pipeline over Postgres +
-   pgvector for context, and a Redis-backed contextual bandit tracker with
-   RLHF preference collection so replies improve over time.
-
-2. DocIntel (June 2026) - Document Intelligence & Agentic RAG Platform.
-   Stack: Next.js, FastAPI, ChromaDB, Postgres.
-   Parses scanned/digital PDFs (OCR + table extraction), classifies documents
-   via LLM, and answers questions with inline page-level citations. Uses
-   hybrid retrieval - vector search (ChromaDB/Chroma Cloud) + BM25 keyword
-   search combined via Reciprocal Rank Fusion - plus cross-encoder
-   re-ranking. Containerized with Docker/docker-compose, deployed across
-   Render, Vercel, and Chroma Cloud with streaming SSE chat responses.
-   Live demo: https://doc-intel-mu.vercel.app/
-
-3. AI Dungeon Master (February 2026) - full-stack AI text adventure.
-   Stack: Next.js 16, TypeScript, Groq API, FLUX.1.
-   Low-latency streaming narration via Groq running Llama 3.3 70B over
-   Server-Sent Events. Uses Llama 4 Scout 17B for real-world object
-   recognition through the camera, weaving recognized objects into the
-   story. Generates a scene image per action via FLUX.1-schnell, supports
-   voice input via the Web Speech API, and exports the full playthrough as
-   a storybook PDF via jsPDF.
-   Live demo: https://dungeon-master-kappa.vercel.app/
-
-4. Nearby Vibes (March 2026) - mood-based place recommender.
-   Stack: React, Leaflet.js, Overpass API, Nominatim.
-   Pick a mood (work mode, date night, quick bite, budget hunt, or "new
-   in town") and get real nearby places from live OpenStreetMap data -
-   no API keys required anywhere in the stack. Auto-widens the search
-   radius (1.5km, then 5km, then 10km) when results are sparse. "New in
-   Town" mode gives a checklist of city essentials (hospital, pharmacy,
-   ATM, transit, etc.) with a progress bar. Distance is calculated
-   client-side via the Haversine formula from the browser's Geolocation
-   API. Favorites and search history persist in localStorage, no backend.
-   Live demo: https://nearby-vibes.vercel.app/
 """
 
 SKILLS = """
@@ -76,7 +57,49 @@ ACHIEVEMENTS = """
 """
 
 
-def build_system_prompt() -> str:
+async def fetch_projects_context() -> str:
+    now = time.time()
+    if _cache["text"] and (now - _cache["fetched_at"] < CACHE_TTL_SECONDS):
+        return _cache["text"]
+
+    if not FRONTEND_URL:
+        return FALLBACK_PROJECTS
+
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(f"{FRONTEND_URL}/api/context")
+            resp.raise_for_status()
+            payload = resp.json()
+    except Exception:
+        # Serve the last good copy if we have one, otherwise the fallback.
+        return _cache["text"] or FALLBACK_PROJECTS
+
+    lines = []
+    for i, p in enumerate(payload.get("projects", []), start=1):
+        lines.append(f"{i}. {p['title']} ({p['date']}) - {p['tagline']}")
+        lines.append(f"   Stack: {', '.join(p['tech'])}")
+        if p.get("summary"):
+            lines.append(f"   {p['summary']}")
+        for m in p.get("metrics", []):
+            lines.append(f"   - {m}")
+        if p.get("details"):
+            lines.append(f"   {p['details']}")
+        demo = (p.get("links") or {}).get("demo")
+        if demo:
+            lines.append(f"   Live demo: {demo}")
+        github = (p.get("links") or {}).get("github")
+        if github:
+            lines.append(f"   Source: {github}")
+        lines.append("")
+
+    text = "\n".join(lines)
+    _cache["text"] = text
+    _cache["fetched_at"] = now
+    return text
+
+
+async def build_system_prompt() -> str:
+    projects_text = await fetch_projects_context()
     return f"""You are a concise assistant embedded on Ankit Negi's portfolio site.
 You answer visitor questions about Ankit's background, skills, and projects
 using ONLY the context below. If something isn't covered by the context,
@@ -89,7 +112,7 @@ factual. Don't invent metrics, dates, or claims not present in the context.
 {PROFILE}
 
 --- PROJECTS ---
-{PROJECTS}
+{projects_text}
 
 --- SKILLS ---
 {SKILLS}

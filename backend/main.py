@@ -50,7 +50,8 @@ async def chat(req: ChatRequest):
             detail="GROQ_API_KEY is not configured on the server.",
         )
 
-    messages = [{"role": "system", "content": build_system_prompt()}]
+    system_prompt = await build_system_prompt()
+    messages = [{"role": "system", "content": system_prompt}]
     for turn in req.history[-6:]:  # keep recent context small
         messages.append({"role": turn.role, "content": turn.content})
     messages.append({"role": "user", "content": req.message})

@@ -6,6 +6,7 @@ import { Footer } from "@/components/footer";
 import { AssistantWidget } from "@/components/assistant-widget";
 import { SITE_URL } from "@/lib/site";
 import "./globals.css";
+import { BootIntro } from "@/components/boot-intro";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
@@ -94,6 +95,7 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
         />
+        <BootIntro />
         <Nav />
         {children}
         <Footer />

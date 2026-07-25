@@ -51,4 +51,17 @@ export const projects: Project[] = [
       github: "https://github.com/ankitnegi-dev/dungeon-master",
     },
   },
+  {
+    slug: "nearby-vibes",
+    title: "Nearby Vibes",
+    tagline: "Mood-based place recommender on live OpenStreetMap data",
+    date: "2026-03",
+    tech: ["React", "Leaflet.js", "Overpass API", "Nominatim"],
+    icon: "map-pin",
+    featured: false,
+    links: {
+      demo: "https://nearby-vibes.vercel.app/",
+      github: "https://github.com/ankitnegi-dev/nearby-vibes",
+    },
+  },
 ];

@@ -6,6 +6,7 @@ import {
   IconNetwork,
   IconFileSearch,
   IconSword,
+  IconMapPin,
   IconApps,
   type Icon,
 } from "@tabler/icons-react";
@@ -15,8 +16,8 @@ const iconMap: Record<string, Icon> = {
   network: IconNetwork,
   "file-search": IconFileSearch,
   sword: IconSword,
+  "map-pin": IconMapPin,
 };
-
 function formatDate(date: string) {
   const [year] = date.split("-");
   return year;

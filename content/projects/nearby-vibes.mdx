@@ -1,0 +1,35 @@
+---
+summary: A mood-based place recommender - pick "date night" or "quick bite" and get real nearby places from live OpenStreetMap data, no API keys required.
+metrics:
+  - "Zero API cost - every data source used is free, no key required"
+  - "Auto-widening search radius (1.5km → 3km → 5km) when results are sparse"
+  - "Client-side Haversine distance calculation, no server round-trip"
+---
+
+## The idea
+
+Most "places near me" apps default to generic categories - restaurants, gas stations, ATMs. Nearby Vibes starts from mood instead: work mode, date night, quick bite, budget hunt, or a dedicated "new in town" mode for someone who just landed somewhere unfamiliar and needs the actual essentials - hospital, pharmacy, ATM, transit - not a curated "top 10" list.
+
+## Data, entirely free
+
+The whole stack runs on free, keyless APIs: the **Overpass API** for live OpenStreetMap point-of-interest data, **Nominatim** for city search and geocoding, and OpenStreetMap tiles for the map itself, rendered through **Leaflet.js**. Each mood maps to a dynamically built Overpass query - "date night" pulls restaurants, bars, and lounges; "quick bite" pulls fast food and food courts.
+
+## Handling sparse results
+
+A single fixed search radius fails constantly - too small in a city, uselessly large in a suburb. Nearby Vibes retries automatically: it queries a 1.5km radius first, and if that comes back empty, **widens to 5km, then 10km**, without the user having to manually adjust anything.
+
+## New in Town mode
+
+This is the most distinct feature: a **checklist of city essentials** - hospital, pharmacy, police, ATM, grocery, transit, post office, restaurant - with a progress bar as each is found, plus free-text keyword search for anything not on the list (searching "SBI ATM" or "Apollo Hospital" directly). It's built for the specific moment of arriving somewhere new with no local knowledge yet.
+
+## Distance and sorting
+
+Every result gets a real-world distance via the **Haversine formula**, calculated client-side against the user's GPS coordinates from the browser's Geolocation API - no server needed for something this cheap to compute. Results can be filtered to **open now** and sorted by nearest or top-rated.
+
+## Persistence without a backend
+
+Favorites and search history are saved entirely in **localStorage** - no account, no database, no backend at all. A stats dashboard surfaces usage patterns (total searches, mood breakdown, cities visited) purely from what's already stored locally.
+
+## What I'd build next
+
+The most valuable upgrade would be reliability around the Overpass API itself - public instances rate-limit under load, so a caching layer (even a simple one) between the client and Overpass would make repeat searches instant and reduce how often the app hits that shared public resource.

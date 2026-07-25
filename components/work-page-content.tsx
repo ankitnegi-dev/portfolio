@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { ProjectCard } from "@/components/project-card";
 import { FadeIn } from "@/components/animated/fade-in";
+import { GithubStats } from "@/components/github-stats";
 import type { Project } from "@/lib/projects";
 
 type ProjectWithHref = { project: Project; href: string };
@@ -69,19 +70,7 @@ export function WorkPageContent({ items }: { items: ProjectWithHref[] }) {
         </div>
       </section>
 
-      <section className="max-w-4xl mx-auto px-6 pb-20">
-        <p className="font-mono text-xs text-[var(--text-muted)] uppercase tracking-wide mb-4">
-          GitHub activity
-        </p>
-        <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-1)] p-4 overflow-x-auto">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="https://ghchart.rshah.org/4c8dff/ankitnegi-dev"
-            alt="Ankit Negi's GitHub contribution graph"
-            className="min-w-[600px] w-full"
-          />
-        </div>
-      </section>
+      <GithubStats />
     </>
   );
 }

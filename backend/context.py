@@ -45,6 +45,18 @@ PROJECTS = """
    voice input via the Web Speech API, and exports the full playthrough as
    a storybook PDF via jsPDF.
    Live demo: https://dungeon-master-kappa.vercel.app/
+
+4. Nearby Vibes (March 2026) - mood-based place recommender.
+   Stack: React, Leaflet.js, Overpass API, Nominatim.
+   Pick a mood (work mode, date night, quick bite, budget hunt, or "new
+   in town") and get real nearby places from live OpenStreetMap data -
+   no API keys required anywhere in the stack. Auto-widens the search
+   radius (1.5km, then 5km, then 10km) when results are sparse. "New in
+   Town" mode gives a checklist of city essentials (hospital, pharmacy,
+   ATM, transit, etc.) with a progress bar. Distance is calculated
+   client-side via the Haversine formula from the browser's Geolocation
+   API. Favorites and search history persist in localStorage, no backend.
+   Live demo: https://nearby-vibes.vercel.app/
 """
 
 SKILLS = """

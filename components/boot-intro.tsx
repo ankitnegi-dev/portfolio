@@ -7,7 +7,7 @@ const STORAGE_KEY = "boot-intro-seen";
 
 const LINE_DELAY_MS = 500; // time between each line appearing
 const HOLD_AFTER_TEXT_MS = 2200; // how long the full screen holds once all lines are shown
-const FADE_OUT_MS = 1.1; // seconds — exit transition duration
+const FADE_OUT_MS = 1.1; // seconds - exit transition duration
 
 const lines = [
   "$ initializing ankit.dev",
@@ -27,7 +27,7 @@ export function BootIntro() {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time read from sessionStorage on mount
       if (!seen) setShow(true);
     } catch {
-      // sessionStorage unavailable (e.g. privacy mode) — just skip the intro
+      // sessionStorage unavailable (e.g. privacy mode) - just skip the intro
     }
   }, [shouldReduceMotion]);
 

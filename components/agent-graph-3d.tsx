@@ -119,7 +119,7 @@ function Graph({
     const targetY = pointer.current.x * 0.18;
     const targetX = pointer.current.y * -0.12;
 
-    // damped approach instead of a snap — weighted drift, not instant tracking
+    // damped approach instead of a snap - weighted drift, not instant tracking
     groupRef.current.rotation.y = THREE.MathUtils.damp(
       groupRef.current.rotation.y,
       targetY,
@@ -157,7 +157,7 @@ function Graph({
 }
 
 // Tracks normalized pointer position over the canvas element and writes it
-// into a ref (not state) so mouse movement never triggers a React re-render —
+// into a ref (not state) so mouse movement never triggers a React re-render -
 // useFrame reads the ref directly on the render loop instead.
 function PointerTracker({ target }: { target: React.RefObject<{ x: number; y: number }> }) {
   const { gl } = useThree();

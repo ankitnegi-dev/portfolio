@@ -49,6 +49,28 @@
   --font-mono: var(--font-mono);
 }
 
+/* ---------------------------------------------
+  Glassmorphism - scoped utility, not a new theme.
+  Used only on: nav (once scrolled) + assistant widget panel.
+  --------------------------------------------- */
+:root {
+  --glass-bg: rgba(18, 22, 26, 0.72); /* --surface-1 at reduced opacity */
+}
+
+.glass-surface {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* fallback for browsers without backdrop-filter: solid surface so text stays legible */
+@supports not
+  ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-surface {
+    background: var(--surface-1);
+  }
+}
+
 * {
   border-color: var(--border);
 }

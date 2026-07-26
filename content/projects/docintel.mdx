@@ -1,33 +1,34 @@
 ---
-summary: A multi-agent swarm that monitors social media and drafts replies, with a human always in the loop before anything goes out.
+summary: A document intelligence platform that answers questions over scanned and digital PDFs, with every answer traceable back to the exact page it came from.
 metrics:
-  - "Multi-agent orchestration via LangGraph"
-  - "Kafka event streaming with full audit trail"
-  - "Self-improving replies via RLHF + contextual bandit"
+  - "Hybrid retrieval: vector search + BM25 with Reciprocal Rank Fusion"
+  - "Cross-encoder re-ranking for precision"
+  - "Deployed across Render, Vercel, and Chroma Cloud"
 ---
 
 ## The problem
 
-Most "AI social media" tools either post without oversight or require someone to manually watch every mention. Neither scales. TechDesk AI was built to sit in between: agents do the watching, drafting, and prioritizing, but nothing ships without a human approving it first.
+Most RAG demos answer questions confidently and leave you to verify them yourself. For document-heavy workflows - contracts, reports, filings - that's not good enough. DocIntel was built around one constraint: every answer has to point back to the exact page it came from.
 
-## Architecture
+## Ingestion
 
-The system runs as a swarm of cooperating agents orchestrated with **LangGraph**, backed by **Llama 3.3 70B** for reasoning and drafting. Each agent has a narrow job - one listens for relevant mentions, another drafts a response, another decides what needs a human's attention right now versus what can wait.
+Documents come in as scanned or digital PDFs. The pipeline runs **OCR and table extraction** on scanned files, then classifies each document via an LLM so downstream retrieval knows what kind of document it's dealing with before a single question is asked.
 
-Agents don't talk to each other directly. Every interaction goes through **Apache Kafka**, which gives the system two things most agent demos skip: a durable, append-only audit trail of every decision an agent made, and the ability to add or restart individual agents without taking the whole system down.
+## Retrieval
 
-## Retrieval and context
+Pure vector search misses exact terms; pure keyword search misses paraphrases. DocIntel runs both - **vector similarity search against ChromaDB (Chroma Cloud in production)** alongside **BM25 keyword search** - and combines the two result sets with **Reciprocal Rank Fusion**. A **cross-encoder re-ranking** pass then reorders the fused candidates by actual relevance to the question before anything reaches the model.
 
-Replies aren't generated from nothing - a **RAG pipeline over PostgreSQL with pgvector** gives agents relevant context (prior conversations, brand voice examples, past resolutions) before they draft anything. This is what keeps drafts from sounding generic.
+<DocIntelPipeline3D />
 
-## Human-in-the-loop
 
-A **FastAPI + WebSocket dashboard** streams drafted replies to a human reviewer in real time. Nothing is posted without explicit approval - the system's job is to remove the busywork of monitoring and drafting, not the judgment call of what actually gets said publicly.
+## Answering with receipts
 
-## Getting better over time
+Answers stream back over **SSE** and are always paired with **inline, page-level citations** and citation-grounded thumbnails - so a user isn't just told an answer, they can see exactly where it came from and check it themselves in seconds.
 
-Every approval, edit, or rejection a human makes is captured as a preference signal. A **contextual bandit strategy tracker in Redis** uses that signal to shift which drafting strategies get used more often - so the system's suggestions get closer to what a human would actually approve, without retraining a model from scratch.
+## From prototype to production
+
+Document metadata started as flat JSON files, which worked for a prototype and broke down fast under concurrent access. It was migrated to a **Postgres-backed repository layer**, and the whole app was **containerized with Docker and docker-compose** so the local environment matches what actually runs in production - deployed across Render, Vercel, and Chroma Cloud, with layered upload/storage/API security.
 
 ## What I'd build next
 
-The natural next step is letting the bandit tracker reason about *why* a draft got rejected, not just that it did - right now it optimizes on the outcome, not the cause.
+Multi-document reasoning - right now each answer is grounded in a single document's context; cross-referencing claims across multiple documents is the natural next layer.

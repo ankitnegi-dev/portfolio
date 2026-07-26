@@ -1,8 +1,11 @@
 import type { MDXComponents } from "mdx/types";
 import { AgentGraphLoader } from "@/components/agent-graph-loader";
+import { DocIntelPipelineLoader } from "@/components/docintel-pipeline-loader";
+
 
 export const mdxComponents: MDXComponents = {
   AgentGraph3D: AgentGraphLoader,
+  DocIntelPipeline3D: DocIntelPipelineLoader,
   h2: (props) => (
     <h2
       className="font-display text-xl font-semibold mt-10 mb-3 first:mt-0"

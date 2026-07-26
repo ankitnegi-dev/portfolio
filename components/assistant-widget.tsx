@@ -100,8 +100,7 @@ export function AssistantWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={shouldReduceMotion ? undefined : { opacity: 0, y: 12, scale: 0.98 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className="mb-3 w-[340px] max-w-[calc(100vw-2.5rem)] rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-1)] shadow-2xl flex flex-col overflow-hidden"
-          >
+            className="mb-3 w-[340px] max-w-[calc(100vw-2.5rem)] rounded-[var(--radius)] border border-[var(--border)] glass-surface shadow-2xl flex flex-col overflow-hidden"          >
             <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]">
               <div>
                 <p className="text-sm font-medium">Ask about Ankit</p>

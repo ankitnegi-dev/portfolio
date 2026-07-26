@@ -1,7 +1,7 @@
 "use client";
 
-import { Suspense, useMemo, useRef } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, Line, Text } from "@react-three/drei";
 import * as THREE from "three";
 
@@ -97,13 +97,41 @@ function Pulse({
   );
 }
 
-function Graph() {
+function Graph({
+  pointer,
+  reduceMotion,
+}: {
+  pointer: React.RefObject<{ x: number; y: number }>;
+  reduceMotion: boolean;
+}) {
   const groupRef = useRef<THREE.Group>(null);
   const byId = Object.fromEntries(nodes.map((n) => [n.id, n]));
 
-  useFrame(({ clock }) => {
+  useFrame((_, delta) => {
     if (!groupRef.current) return;
-    groupRef.current.rotation.y = Math.sin(clock.getElapsedTime() * 0.15) * 0.15;
+
+    if (reduceMotion) {
+      groupRef.current.rotation.set(0, 0, 0);
+      return;
+    }
+
+    // target rotation derived from cursor position (small range: ~0.18 rad)
+    const targetY = pointer.current.x * 0.18;
+    const targetX = pointer.current.y * -0.12;
+
+    // damped approach instead of a snap — weighted drift, not instant tracking
+    groupRef.current.rotation.y = THREE.MathUtils.damp(
+      groupRef.current.rotation.y,
+      targetY,
+      4,
+      delta
+    );
+    groupRef.current.rotation.x = THREE.MathUtils.damp(
+      groupRef.current.rotation.x,
+      targetX,
+      4,
+      delta
+    );
   });
 
   return (
@@ -128,7 +156,52 @@ function Graph() {
   );
 }
 
+// Tracks normalized pointer position over the canvas element and writes it
+// into a ref (not state) so mouse movement never triggers a React re-render —
+// useFrame reads the ref directly on the render loop instead.
+function PointerTracker({ target }: { target: React.RefObject<{ x: number; y: number }> }) {
+  const { gl } = useThree();
+
+  useEffect(() => {
+    const el = gl.domElement;
+
+    function onMove(e: PointerEvent) {
+      const rect = el.getBoundingClientRect();
+      target.current.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      target.current.y = ((e.clientY - rect.top) / rect.height) * 2 - 1;
+    }
+
+    function onLeave() {
+      target.current.x = 0;
+      target.current.y = 0;
+    }
+
+    el.addEventListener("pointermove", onMove);
+    el.addEventListener("pointerleave", onLeave);
+    return () => {
+      el.removeEventListener("pointermove", onMove);
+      el.removeEventListener("pointerleave", onLeave);
+    };
+  }, [gl, target]);
+
+  return null;
+}
+
 export function AgentGraph3D() {
+  const pointer = useRef({ x: 0, y: 0 });
+  const [reduceMotion, setReduceMotion] = useState(
+  () =>
+    typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+);
+
+useEffect(() => {
+  const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const onChange = () => setReduceMotion(mq.matches);
+  mq.addEventListener("change", onChange);
+  return () => mq.removeEventListener("change", onChange);
+}, []);
+
   return (
     <div className="not-prose rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-1)] p-4 my-8">
       <div className="flex items-center justify-between mb-3">
@@ -149,12 +222,12 @@ export function AgentGraph3D() {
             <ambientLight intensity={0.6} />
             <pointLight position={[3, 3, 3]} intensity={40} color={ACCENT} />
             <pointLight position={[-3, -2, 2]} intensity={20} color={ACCENT_WARM} />
-            <Graph />
+            <PointerTracker target={pointer} />
+            <Graph pointer={pointer} reduceMotion={reduceMotion} />
             <OrbitControls
               enablePan={false}
               enableZoom={false}
-              autoRotate
-              autoRotateSpeed={0.6}
+              autoRotate={false}
               minPolarAngle={Math.PI / 2.6}
               maxPolarAngle={Math.PI / 1.6}
             />

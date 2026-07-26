@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useMotionValue, useReducedMotion, useTransform } from "framer-motion";
 import {
   IconNetwork,
   IconFileSearch,
@@ -34,10 +34,37 @@ export function ProjectCard({
   const IconComponent = iconMap[project.icon] ?? IconApps;
   const isExternal = href.startsWith("http");
 
+  // raw cursor position within the card, normalized to -0.5..0.5
+  const pointerX = useMotionValue(0);
+  const pointerY = useMotionValue(0);
+
+  // small rotation range - enough to read as "responsive," not a gimmick
+  const rotateX = useTransform(pointerY, [-0.5, 0.5], [7, -7]);
+  const rotateY = useTransform(pointerX, [-0.5, 0.5], [-7, 7]);
+
+  function handleMouseMove(e: React.MouseEvent<HTMLDivElement>) {
+    if (shouldReduceMotion) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    pointerX.set((e.clientX - rect.left) / rect.width - 0.5);
+    pointerY.set((e.clientY - rect.top) / rect.height - 0.5);
+  }
+
+  function handleMouseLeave() {
+    pointerX.set(0);
+    pointerY.set(0);
+  }
+
   return (
     <motion.div
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
       whileHover={shouldReduceMotion ? undefined : { y: -3, scale: 1.015 }}
       transition={{ duration: 0.18, ease: "easeOut" }}
+      style={
+        shouldReduceMotion
+          ? undefined
+          : { rotateX, rotateY, transformPerspective: 800 }
+      }
     >
       <Link
         href={href}

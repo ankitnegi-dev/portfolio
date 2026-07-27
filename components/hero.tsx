@@ -45,7 +45,7 @@ export function Hero() {
             className="text-[var(--text-secondary)] text-base max-w-lg mb-8"
           >
             Multi-agent orchestration, RAG pipelines, and production-grade
-            full-stack apps. Currently building at IIITDM Chennai.
+            full-stack apps. Currently building at IIIT Chennai.
           </motion.p>
           <motion.div variants={item} className="flex items-center gap-4">
             <Link
@@ -60,7 +60,7 @@ export function Hero() {
               rel="noopener noreferrer"
               className="font-mono text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
             >
-              github ↗
+              GitHub ↗
             </a>
           </motion.div>
         </div>

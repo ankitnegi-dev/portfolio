@@ -22,7 +22,7 @@ export default function AboutPage() {
 
         <div className="space-y-4 text-[var(--text-secondary)] text-sm leading-relaxed mb-12">
           <p>
-            I&apos;m a Computer Science undergrad at IIITDM Chennai,
+            I&apos;m a Computer Science undergrad at IIIT Chennai,
             currently in a dual-degree (B.Tech + M.Tech) program running
             2024-2029. Most of what I build sits at the intersection of
             full-stack engineering and AI agent systems - orchestrating

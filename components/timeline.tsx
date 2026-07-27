@@ -7,7 +7,7 @@ type TimelineEntry = {
 const entries: TimelineEntry[] = [
   {
     date: "2024",
-    title: "Started at IIITDM Chennai",
+    title: "Started at IIIT Chennai",
     description: "Dual-degree (B.Tech + M.Tech) in Computer Science, 2024-2029.",
   },
   {

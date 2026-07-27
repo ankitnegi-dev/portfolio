@@ -8,15 +8,19 @@
 ![Three.js](https://img.shields.io/badge/Three.js-000000?style=for-the-badge&logo=threedotjs&logoColor=white)
 ![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)
 
-Personal portfolio built with Next.js, TypeScript, and Tailwind CSS. Live at [portfolio-inky-delta-25cipm8ebc.vercel.app](https://portfolio-inky-delta-25cipm8ebc.vercel.app).
+Personal portfolio built with Next.js, TypeScript, and Tailwind CSS. Live at [ankit-negi.is-a.dev](https://ankit-negi.is-a.dev).
 
 ## Features
 
 - **Dark "engineering console" theme** - custom design tokens, Space Grotesk / Inter / JetBrains Mono type system
 - **MDX case studies** - deep-dive write-ups for flagship projects, rendered from `content/projects/*.mdx`, with an optional-by-default workflow: projects without a case study link straight to their live demo/GitHub instead
-- **3D agent architecture graph** - an interactive Three.js / React Three Fiber visualization embedded in the TechDesk AI case study, lazy-loaded via `IntersectionObserver` so it only costs anything once scrolled into view
+- **3D agent architecture graph** - an interactive Three.js / React Three Fiber visualization embedded in the TechDesk AI case study, with cursor-driven camera drift instead of static auto-rotation, lazy-loaded via `IntersectionObserver` so it only costs anything once scrolled into view
+- **3D retrieval pipeline visualization** - a second Three.js diagram embedded in the DocIntel case study, showing the hybrid vector + BM25 retrieval flow through RRF fusion and re-ranking
+- **Hero wireframe centerpiece** - a rotating wireframe icosahedron beside the hero text on desktop, with subtle cursor-driven tilt layered on top of ambient rotation
 - **AI assistant widget** - a chat widget grounded in this site's actual content, backed by a separate FastAPI service (see [`/backend`](./backend)) calling the Groq API
 - **Framer Motion throughout** - staggered hero entrance, scroll-reveal on cards, hover interactions, page transitions - all respecting `prefers-reduced-motion`
+- **Scoped glassmorphism** - frosted-glass surfaces on the nav bar (on scroll) and the assistant widget panel, layered on the existing design tokens rather than a new visual language
+- **Cursor-reactive project cards** - subtle 3D tilt on hover using Framer Motion's motion values, disabled under `prefers-reduced-motion`
 - **Full SEO/metadata pass** - dynamic OG image generation, JSON-LD Person schema, sitemap, robots.txt
 - **Lighthouse: 96 Performance / 100 Accessibility / 100 Best Practices / 100 SEO** (tested on the heaviest page, throttled mobile emulation)
 
@@ -42,7 +46,8 @@ backend/              separate FastAPI service for the AI assistant
 
 ## Local setup
 
-```bash
+```
+bash
 npm install
 npm run dev
 ```
@@ -54,11 +59,8 @@ To run the AI assistant locally, also start the backend - see [`backend/README.m
 ### Environment variables
 
 Copy `.env.local.example` to `.env.local`:
-
-```
-RAG_API_URL=          # URL of the deployed/local FastAPI backend
-NEXT_PUBLIC_SITE_URL=  # used for sitemap, robots.txt, and OG tags
-```
+RAG_API_URL= # URL of the deployed/local FastAPI backend
+NEXT_PUBLIC_SITE_URL= # used for sitemap, robots.txt, and OG tags
 
 ## Adding a new project
 

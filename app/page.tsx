@@ -1,5 +1,6 @@
 import { Hero } from "@/components/hero";
 import { ProjectGrid } from "@/components/project-grid";
+import { ReactionSignals } from "@/components/reaction-signals";
 import { projects } from "@/lib/projects";
 
 export default function Home() {
@@ -9,6 +10,7 @@ export default function Home() {
     <main className="flex-1">
       <Hero />
       <ProjectGrid projects={featured} title="Selected work" />
+            <ReactionSignals />
     </main>
   );
 }

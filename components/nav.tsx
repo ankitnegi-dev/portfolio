@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { BackendStatusBadge } from "@/components/backend-status-badge";
 
 const links = [
   { href: "/projects", label: "work" },
@@ -34,18 +35,21 @@ export function Nav() {
         >
           ankit.dev
         </Link>
-        <ul className="flex items-center gap-4 sm:gap-6">
-          {links.map((link) => (
-            <li key={link.href}>
-              <Link
-                href={link.href}
-                className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
-              >
-                {link.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <div className="flex items-center gap-5 sm:gap-6">
+          <BackendStatusBadge />
+          <ul className="flex items-center gap-4 sm:gap-6">
+            {links.map((link) => (
+              <li key={link.href}>
+                <Link
+                  href={link.href}
+                  className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                >
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
       </nav>
     </header>
   );

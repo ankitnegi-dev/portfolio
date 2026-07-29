@@ -88,19 +88,21 @@ export function ReactionSignals() {
       {/* ambient trace field - accumulated presence of every past visitor */}
       <div className="absolute inset-0 pointer-events-none">
         {data?.trace.map((point, i) => (
-          <span
+          <motion.span
             key={`${point.ts}-${i}`}
-            className="absolute w-1 h-1 rounded-full"
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 0.85, scale: 1 }}
+            transition={{ duration: 0.5, delay: Math.min(i * 0.02, 1) }}
+            className="absolute w-2.5 h-2.5 rounded-full"
             style={{
               left: `${point.x}%`,
               top: `${point.y}%`,
               backgroundColor: LABEL_COLORS[point.label],
-              opacity: 0.35,
+              boxShadow: `0 0 8px 2px ${LABEL_COLORS[point.label]}`,
             }}
           />
         ))}
       </div>
-
       <div className="relative text-center">
         <p className="font-mono text-xs text-[var(--text-muted)] mb-1">
           {data

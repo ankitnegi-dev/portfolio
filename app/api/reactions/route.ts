@@ -1,34 +1,16 @@
 import { NextResponse } from "next/server";
 import { getRedis } from "@/lib/redis";
+import { getRateLimiter, getClientIp } from "@/lib/rate-limit";
 
 const LABELS = ["impressive", "curious", "collab", "browsing"] as const;
 type Label = (typeof LABELS)[number];
 
 type TracePoint = { x: number; y: number; label: Label; ts: number };
 
-async function notifyDiscord(point: TracePoint) {
-  const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
-  if (!webhookUrl) return;
-
-  try {
-    await fetch(webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        content: `🤝 Someone on the portfolio just clicked **"want to build together"** — ${new Date(
-          point.ts
-        ).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}`,
-      }),
-    });
-  } catch {
-    // notification failure shouldn't break the actual reaction flow
-  }
-}
-
 async function buildAggregate(redis: NonNullable<ReturnType<typeof getRedis>>) {
-const counts: Record<Label, number> =
-(await redis.hgetall<Record<Label, number>>("reactions:counts")) ??
-({} as Record<Label, number>);
+  const counts: Record<Label, number> =
+    (await redis.hgetall<Record<Label, number>>("reactions:counts")) ??
+    ({} as Record<Label, number>);
   const total = LABELS.reduce((sum, l) => sum + (Number(counts[l]) || 0), 0);
 
   const today = new Date().toISOString().slice(0, 10);
@@ -53,6 +35,39 @@ const counts: Record<Label, number> =
   };
 }
 
+function geoFromHeaders(req: Request): string {
+  const city = req.headers.get("x-vercel-ip-city");
+  const region = req.headers.get("x-vercel-ip-country-region");
+  const country = req.headers.get("x-vercel-ip-country");
+
+  const parts = [city, region, country]
+    .filter((v): v is string => v !== null)
+    .map(decodeURIComponent);
+
+  return parts.length > 0 ? parts.join(", ") : "location unavailable";
+}
+
+async function notifyDiscord(point: TracePoint, location: string) {
+  const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
+  if (!webhookUrl) return;
+
+  try {
+    await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        content:
+          `🤝 Someone on the portfolio just clicked **"want to build together"**\n` +
+          `📍 ${location}\n` +
+          `🕒 ${new Date(point.ts).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}`,
+        allowed_mentions: { parse: [] },
+      }),
+    });
+  } catch {
+    // notification failure shouldn't break the actual reaction flow
+  }
+}
+
 export async function GET() {
   const redis = getRedis();
   if (!redis) {
@@ -74,10 +89,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "not configured" }, { status: 503 });
   }
 
+  const ratelimiter = getRateLimiter();
+  if (ratelimiter) {
+    const ip = getClientIp(req);
+    const { success } = await ratelimiter.limit(ip);
+    if (!success) {
+      return NextResponse.json({ error: "too many requests" }, { status: 429 });
+    }
+  }
+
   const body = await req.json().catch(() => null);
   const label = body?.label as string | undefined;
-  const x = typeof body?.x === "number" ? body.x : Math.random() * 100;
-  const y = typeof body?.y === "number" ? body.y : Math.random() * 100;
+  const x = typeof body?.x === "number" ? body.x : 50;
+  const y = typeof body?.y === "number" ? body.y : 50;
 
   if (!label || !LABELS.includes(label as Label)) {
     return NextResponse.json({ error: "invalid label" }, { status: 400 });
@@ -89,21 +113,13 @@ export async function POST(req: Request) {
   await Promise.all([
     redis.hincrby("reactions:counts", label, 1),
     redis.incr(`reactions:day:${today}`),
-    redis.expire(`reactions:day:${today}`, 60 * 60 * 48), // 48h TTL, auto-cleans old daily keys
-    redis.lpush("reactions:trace", JSON.stringify(point)),
-    redis.ltrim("reactions:trace", 0, 149), // keep only the most recent 150 points
-  ]);
-
-  await Promise.all([
-    redis.hincrby("reactions:counts", label, 1),
-    redis.incr(`reactions:day:${today}`),
     redis.expire(`reactions:day:${today}`, 60 * 60 * 48),
     redis.lpush("reactions:trace", JSON.stringify(point)),
     redis.ltrim("reactions:trace", 0, 149),
   ]);
 
   if (label === "collab") {
-    await notifyDiscord(point);
+    await notifyDiscord(point, geoFromHeaders(req));
   }
 
   const data = await buildAggregate(redis);

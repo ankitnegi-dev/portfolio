@@ -6,6 +6,25 @@ type Label = (typeof LABELS)[number];
 
 type TracePoint = { x: number; y: number; label: Label; ts: number };
 
+async function notifyDiscord(point: TracePoint) {
+  const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
+  if (!webhookUrl) return;
+
+  try {
+    await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        content: `🤝 Someone on the portfolio just clicked **"want to build together"** — ${new Date(
+          point.ts
+        ).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}`,
+      }),
+    });
+  } catch {
+    // notification failure shouldn't break the actual reaction flow
+  }
+}
+
 async function buildAggregate(redis: NonNullable<ReturnType<typeof getRedis>>) {
 const counts: Record<Label, number> =
 (await redis.hgetall<Record<Label, number>>("reactions:counts")) ??
@@ -74,6 +93,18 @@ export async function POST(req: Request) {
     redis.lpush("reactions:trace", JSON.stringify(point)),
     redis.ltrim("reactions:trace", 0, 149), // keep only the most recent 150 points
   ]);
+
+  await Promise.all([
+    redis.hincrby("reactions:counts", label, 1),
+    redis.incr(`reactions:day:${today}`),
+    redis.expire(`reactions:day:${today}`, 60 * 60 * 48),
+    redis.lpush("reactions:trace", JSON.stringify(point)),
+    redis.ltrim("reactions:trace", 0, 149),
+  ]);
+
+  if (label === "collab") {
+    await notifyDiscord(point);
+  }
 
   const data = await buildAggregate(redis);
   return NextResponse.json(data);

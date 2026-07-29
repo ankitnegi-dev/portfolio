@@ -42,6 +42,10 @@ export function ReactionSignals() {
   const [data, setData] = useState<Aggregate | null>(null);
   const [myReaction, setMyReaction] = useState<Label | null>(readStoredReaction);
   const [submitting, setSubmitting] = useState(false);
+  const [contactValue, setContactValue] = useState("");
+  const [contactStatus, setContactStatus] = useState<
+    "idle" | "sending" | "sent" | "skipped"
+  >("idle");
 
   useEffect(() => {
     fetch("/api/reactions")
@@ -80,10 +84,25 @@ export function ReactionSignals() {
     }
   }
 
+  async function sendContact() {
+    if (!contactValue.trim()) return;
+    setContactStatus("sending");
+    try {
+      await fetch("/api/reactions/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contact: contactValue.trim() }),
+      });
+      setContactStatus("sent");
+    } catch {
+      setContactStatus("sent"); // fail quietly, don't block the user on retry UX
+    }
+  }
+
   return (
     <div
       ref={containerRef}
-      className="relative max-w-4xl mx-auto px-6 py-16 overflow-hidden"
+      className="relative max-w-4xl mx-auto px-6 py-16 overflow-hidden min-h-[280px]"
     >
       {/* ambient trace field - accumulated presence of every past visitor */}
       <div className="absolute inset-0 pointer-events-none">
@@ -103,6 +122,7 @@ export function ReactionSignals() {
           />
         ))}
       </div>
+
       <div className="relative text-center">
         <p className="font-mono text-xs text-[var(--text-muted)] mb-1">
           {data
@@ -153,6 +173,48 @@ export function ReactionSignals() {
             thanks - your signal joined the field above
           </p>
         )}
+
+        {myReaction === "collab" &&
+          contactStatus !== "sent" &&
+          contactStatus !== "skipped" && (
+            <div className="mt-5 max-w-xs mx-auto">
+              <p className="text-xs text-[var(--text-secondary)] mb-2">
+                Want me to actually reach out? Leave an email or LinkedIn (optional).
+              </p>
+              <div className="flex gap-2">
+                <input
+                  value={contactValue}
+                  onChange={(e) => setContactValue(e.target.value)}
+                  placeholder="you@example.com"
+                  className="flex-1 bg-[var(--surface-1)] border border-[var(--border)] rounded-[var(--radius-sm)] px-3 py-1.5 text-xs outline-none focus:border-[var(--accent)] transition-colors"
+                />
+                <button
+                  onClick={sendContact}
+                  disabled={contactStatus === "sending" || !contactValue.trim()}
+                  className="text-xs font-mono text-[var(--accent)] disabled:text-[var(--text-muted)] px-2"
+                >
+                  send
+                </button>
+                <button
+                  onClick={() => setContactStatus("skipped")}
+                  className="text-xs font-mono text-[var(--text-muted)] hover:text-[var(--text-secondary)] px-2"
+                >
+                  skip
+                </button>
+              </div>
+            </div>
+          )}
+
+        {contactStatus === "sent" && (
+          <p className="font-mono text-[11px] text-[var(--accent)] mt-4">
+            got it - I&apos;ll reach out
+          </p>
+        )}
+
+        <p className="font-mono text-[10px] text-[var(--text-muted)] mt-8 opacity-60">
+          reactions are anonymous · &quot;want to build together&quot; shares a
+          rough, city-level location so I know it&apos;s a real visit
+        </p>
       </div>
     </div>
   );

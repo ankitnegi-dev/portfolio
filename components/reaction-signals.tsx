@@ -54,24 +54,15 @@ export function ReactionSignals() {
       .catch(() => setData(null));
   }, []);
 
-  async function react(label: Label, e: React.MouseEvent<HTMLButtonElement>) {
+  async function react(label: Label) {
     if (myReaction || submitting) return;
     setSubmitting(true);
-
-    const container = containerRef.current;
-    let x = 50;
-    let y = 50;
-    if (container) {
-      const rect = container.getBoundingClientRect();
-      x = ((e.clientX - rect.left) / rect.width) * 100;
-      y = ((e.clientY - rect.top) / rect.height) * 100;
-    }
 
     try {
       const res = await fetch("/api/reactions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ label, x, y }),
+        body: JSON.stringify({ label }),
       });
       const updated = await res.json();
       setData(updated);
@@ -140,7 +131,7 @@ export function ReactionSignals() {
             return (
               <button
                 key={r.label}
-                onClick={(e) => react(r.label, e)}
+                onClick={() => react(r.label)}
                 disabled={isDisabled}
                 className={`group flex items-center gap-2 rounded-[var(--radius-sm)] border px-3 py-2 transition-colors ${
                   isMine

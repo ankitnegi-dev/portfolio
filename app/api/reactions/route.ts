@@ -100,12 +100,15 @@ export async function POST(req: Request) {
 
   const body = await req.json().catch(() => null);
   const label = body?.label as string | undefined;
-  const x = typeof body?.x === "number" ? body.x : 50;
-  const y = typeof body?.y === "number" ? body.y : 50;
 
   if (!label || !LABELS.includes(label as Label)) {
     return NextResponse.json({ error: "invalid label" }, { status: 400 });
   }
+
+  // scatter into the open band above the prompt, well clear of the
+  // buttons/text - generated server-side so it's not tied to click position
+  const x = Math.random() * 90 + 5; // 5–95%
+  const y = Math.random() * 25 + 6; // 6–31%
 
   const today = new Date().toISOString().slice(0, 10);
   const point: TracePoint = { x, y, label: label as Label, ts: Date.now() };

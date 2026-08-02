@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
 const REACTIONS = [
@@ -28,22 +28,37 @@ const LABEL_COLORS: Record<Label, string> = {
 
 const STORAGE_KEY = "portfolio_reacted";
 
-function readStoredReaction(): Label | null {
-  if (typeof window === "undefined") return null;
+function subscribeToStorage(callback: () => void) {
+  window.addEventListener("storage", callback);
+  return () => window.removeEventListener("storage", callback);
+}
+
+function getStoredReactionSnapshot(): Label | null {
   const stored = window.localStorage.getItem(STORAGE_KEY);
   return stored && REACTIONS.some((r) => r.label === stored)
     ? (stored as Label)
     : null;
 }
 
+function getServerReactionSnapshot(): Label | null {
+  return null; // server never has a reaction - matches first client render
+}
+
+
 export function ReactionSignals() {
   const shouldReduceMotion = useReducedMotion();
-  const containerRef = useRef<HTMLDivElement>(null);
   const [data, setData] = useState<Aggregate | null>(null);
-  const [myReaction, setMyReaction] = useState<Label | null>(readStoredReaction);
+  // intentionally starts null on both server and client so the first
+  // render matches exactly - localStorage is browser-only and can't be
+  // known at SSR time, so we sync it after mount instead
+  const myReaction = useSyncExternalStore(
+    subscribeToStorage,
+    getStoredReactionSnapshot,
+    getServerReactionSnapshot
+  );
   const [submitting, setSubmitting] = useState(false);
   const [contactValue, setContactValue] = useState("");
-  const [contactStatus, setContactStatus] = useState<
+  const [contactStatus, setContactStatus] = useState <
     "idle" | "sending" | "sent" | "skipped"
   >("idle");
 
@@ -53,6 +68,7 @@ export function ReactionSignals() {
       .then(setData)
       .catch(() => setData(null));
   }, []);
+
 
   async function react(label: Label) {
     if (myReaction || submitting) return;
@@ -66,8 +82,8 @@ export function ReactionSignals() {
       });
       const updated = await res.json();
       setData(updated);
-      setMyReaction(label);
       window.localStorage.setItem(STORAGE_KEY, label);
+      window.dispatchEvent(new Event("storage")); // trigger useSyncExternalStore in this same tab
     } catch {
       // silently fail - this is ambient, not critical path
     } finally {
@@ -91,12 +107,9 @@ export function ReactionSignals() {
   }
 
   return (
-    <div
-      ref={containerRef}
-      className="relative max-w-4xl mx-auto px-6 py-16 overflow-hidden min-h-[280px]"
-    >
-      {/* ambient trace field - accumulated presence of every past visitor */}
-      <div className="absolute inset-0 pointer-events-none">
+    <div className="relative max-w-4xl mx-auto px-6 py-16">
+      {/* dedicated trace band - its own space, nothing else ever renders here */}
+      <div className="relative h-20 mb-6">
         {data?.trace.map((point, i) => (
           <motion.span
             key={`${point.ts}-${i}`}
@@ -114,7 +127,7 @@ export function ReactionSignals() {
         ))}
       </div>
 
-      <div className="relative text-center">
+      <div className="text-center">
         <p className="font-mono text-xs text-[var(--text-muted)] mb-1">
           {data
             ? `${data.total} signals sent · ${data.today} today`

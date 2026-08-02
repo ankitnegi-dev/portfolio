@@ -16,16 +16,7 @@ async function buildAggregate(redis: NonNullable<ReturnType<typeof getRedis>>) {
   const today = new Date().toISOString().slice(0, 10);
   const todayCount = (await redis.get<number>(`reactions:day:${today}`)) ?? 0;
 
-  const rawTrace = await redis.lrange<string>("reactions:trace", 0, 149);
-  const trace: TracePoint[] = rawTrace
-    .map((entry) => {
-      try {
-        return JSON.parse(entry) as TracePoint;
-      } catch {
-        return null;
-      }
-    })
-    .filter((p): p is TracePoint => p !== null);
+  const trace = await redis.lrange<TracePoint>("reactions:trace", 0, 149);
 
   return {
     counts: Object.fromEntries(LABELS.map((l) => [l, Number(counts[l]) || 0])),
@@ -113,12 +104,17 @@ export async function POST(req: Request) {
   const today = new Date().toISOString().slice(0, 10);
   const point: TracePoint = { x, y, label: label as Label, ts: Date.now() };
 
+  try {
+    await redis.lpush("reactions:trace", point);
+    await redis.ltrim("reactions:trace", 0, 149);
+  } catch (err) {
+    console.error("trace write failed:", err);
+  }
+
   await Promise.all([
     redis.hincrby("reactions:counts", label, 1),
     redis.incr(`reactions:day:${today}`),
     redis.expire(`reactions:day:${today}`, 60 * 60 * 48),
-    redis.lpush("reactions:trace", JSON.stringify(point)),
-    redis.ltrim("reactions:trace", 0, 149),
   ]);
 
   if (label === "collab") {

@@ -13,6 +13,7 @@ import {
   IconCircleXFilled,
 } from "@tabler/icons-react";
 import { useBackendStatus } from "@/lib/use-backend-status";
+import Image from "next/image";
 
 type Message = { role: "user" | "assistant"; content: string };
 type View = "home" | "list" | "chat";
@@ -166,23 +167,29 @@ export function AssistantWidget() {
             {/* ---------- HOME ---------- */}
             {view === "home" && (
               <div className="flex flex-col h-full">
-                <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]">
-                  <div>
-                    <p className="text-sm font-medium">Ask about Ankit</p>
-                    <p className="font-mono text-[11px] text-[var(--text-muted)]">
-                      Answers grounded in his actual Projects
-                    </p>
+                <div className="flex items-center justify-between px-4 pt-4 pb-2">
+                  <div className="w-8 h-8 rounded-full bg-[var(--accent-soft)] flex items-center justify-center">
+                    <IconMessageCircle2 size={16} stroke={1.5} className="text-[var(--accent)]" />
                   </div>
-                  <button
-                    onClick={() => setOpen(false)}
-                    aria-label="Close assistant"
-                    className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
-                  >
-                    <IconX size={18} stroke={1.5} />
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <Image
+                      src="/avatar.jpg"
+                      alt="Ankit Negi"
+                      width={36}
+                      height={36}
+                      className="rounded-full border-2 border-[var(--bg)] object-cover"
+                    />
+                    <button
+                      onClick={() => setOpen(false)}
+                      aria-label="Close assistant"
+                      className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                    >
+                      <IconX size={18} stroke={1.5} />
+                    </button>
+                  </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto px-4 py-5 space-y-4">
+                <div className="flex-1 overflow-y-auto px-4 pt-3 pb-5 space-y-4">
                   <div>
                     <p className="font-display text-lg font-semibold leading-snug">
                       Hi there 👋

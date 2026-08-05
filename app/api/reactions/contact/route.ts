@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
+import { getRedis } from "@/lib/redis";
 import { getRateLimiter, getClientIp } from "@/lib/rate-limit";
+
+type ContactSubmission = { contact: string; ts: number };
 
 export async function POST(req: Request) {
   const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
-  if (!webhookUrl) {
-    return NextResponse.json({ error: "not configured" }, { status: 503 });
-  }
+  const redis = getRedis();
 
   const ratelimiter = getRateLimiter();
   if (ratelimiter) {
@@ -24,17 +25,30 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  try {
-    await fetch(webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        content: `📇 Follow-up contact from a "want to build together" click: **${contact}**`,
-        allowed_mentions: { parse: [] }, // prevents @everyone / @here / user-mention abuse
-      }),
-    });
-  } catch {
-    // ignore - best effort
+  const submission: ContactSubmission = { contact, ts: Date.now() };
+
+  if (redis) {
+    try {
+      await redis.lpush("reactions:contacts", submission);
+      await redis.ltrim("reactions:contacts", 0, 99);
+    } catch (err) {
+      console.error("contact storage failed:", err);
+    }
+  }
+
+  if (webhookUrl) {
+    try {
+      await fetch(webhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: `📇 Follow-up contact from a "want to build together" click: **${contact}**`,
+          allowed_mentions: { parse: [] },
+        }),
+      });
+    } catch {
+      // ignore - best effort
+    }
   }
 
   return NextResponse.json({ ok: true });

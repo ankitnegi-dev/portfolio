@@ -1,49 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-type Status = "checking" | "online" | "waking" | "offline";
+import { useBackendStatus, type BackendStatus } from "@/lib/use-backend-status";
 
 export function BackendStatusBadge() {
-  const [status, setStatus] = useState<Status>("checking");
-  const [latency, setLatency] = useState<number | null>(null);
+  const { status, latency } = useBackendStatus();
 
-  useEffect(() => {
-    let cancelled = false;
-    // same "cold start" language your assistant widget already uses -
-    // if the real check hasn't resolved by this point, it's genuinely waking up
-    const wakeTimer = setTimeout(() => {
-      if (!cancelled) setStatus("waking");
-    }, 2500);
-
-    async function check() {
-      try {
-        const res = await fetch("/api/health", { cache: "no-store" });
-        const data = await res.json();
-        if (cancelled) return;
-        clearTimeout(wakeTimer);
-        if (data.status === "online") {
-          setStatus("online");
-          setLatency(data.latencyMs ?? null);
-        } else {
-          setStatus("offline");
-        }
-      } catch {
-        if (!cancelled) {
-          clearTimeout(wakeTimer);
-          setStatus("offline");
-        }
-      }
-    }
-
-    check();
-    return () => {
-      cancelled = true;
-      clearTimeout(wakeTimer);
-    };
-  }, []);
-
-  const config: Record<Status, { color: string; label: string }> = {
+  const config: Record<BackendStatus, { color: string; label: string }> = {
     checking: { color: "var(--text-muted)", label: "checking backend…" },
     waking: { color: "var(--accent-warm)", label: "waking up backend…" },
     online: {

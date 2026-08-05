@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { auth, signOut } from "@/auth";
 import { getRedis } from "@/lib/redis";
 import {
@@ -6,6 +7,7 @@ import {
   IconUsers,
   IconWalk,
 } from "@tabler/icons-react";
+
 
 const LABELS = ["impressive", "curious", "collab", "browsing"] as const;
 type Label = (typeof LABELS)[number];
@@ -47,7 +49,9 @@ async function getDashboardData() {
   const total = LABELS.reduce((sum, l) => sum + (Number(counts[l]) || 0), 0);
 
   return {
-    counts: Object.fromEntries(LABELS.map((l) => [l, Number(counts[l]) || 0])) as Record<Label, number>,
+    counts: Object.fromEntries(
+      LABELS.map((l) => [l, Number(counts[l]) || 0])
+    ) as Record<Label, number>,
     total,
     today: Number(todayCount) || 0,
     trace,
@@ -65,6 +69,10 @@ function formatTimestamp(ts: number) {
 
 export default async function AdminPage() {
   const session = await auth();
+  if (!session) {
+    redirect("/admin/login");
+  }
+
   const data = await getDashboardData();
 
   return (

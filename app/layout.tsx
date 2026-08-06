@@ -4,6 +4,8 @@ import { Analytics } from "@vercel/analytics/next";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
 import { AssistantWidget } from "@/components/assistant-widget";
+import { CommandPalette } from "@/components/command-palette";
+import { Providers } from "@/app/providers";
 import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 import { BootIntro } from "@/components/boot-intro";
@@ -63,7 +65,7 @@ const personJsonLd = {
   jobTitle: "Full-Stack Developer & AI Engineer",
   alumniOf: {
     "@type": "CollegeOrUniversity",
-    name: "Indian Institute of Information Technology, Design and Manufacturing (IIITDM), Chennai",
+    name: "Indian Institute of Information Technology, (IIIT), Chennai",
   },
   knowsAbout: [
     "Full-Stack Development",
@@ -95,12 +97,15 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
         />
-        <BootIntro />
-        <Nav />
-        {children}
-        <Footer />
-        <AssistantWidget />
-        <Analytics />
+        <Providers>
+          <BootIntro />
+          <Nav />
+          {children}
+          <Footer />
+          <AssistantWidget />
+          <CommandPalette />
+          <Analytics />
+        </Providers>
       </body>
     </html>
   );

@@ -98,6 +98,15 @@ export function AssistantWidget() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
   }, [messages, loading]);
 
+  useEffect(() => {
+    function handleOpenEvent() {
+      setOpen(true);
+      setView("chat");
+    }
+    window.addEventListener("open-assistant", handleOpenEvent);
+    return () => window.removeEventListener("open-assistant", handleOpenEvent);
+  }, []);
+
   function toggleOpen() {
     setOpen((v) => {
       const next = !v;

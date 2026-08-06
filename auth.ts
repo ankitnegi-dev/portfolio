@@ -3,6 +3,7 @@ import GitHub from "next-auth/providers/github";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [GitHub],
+  trustHost: true,
   callbacks: {
     async signIn({ profile }) {
       const allowedUsername = process.env.ADMIN_GITHUB_USERNAME;

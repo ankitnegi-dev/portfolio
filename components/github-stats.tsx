@@ -14,21 +14,21 @@ export function GithubStats() {
       </p>
 
       <div className="space-y-4">
-        <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-1)] p-4 overflow-x-auto">
+        <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-1)] p-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={STREAK_STATS_URL}
             alt="Ankit Negi's GitHub contribution streak stats"
-            className="min-w-[600px] w-full"
+            className="w-full h-auto"
           />
         </div>
 
-        <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-1)] p-4 overflow-x-auto">
+        <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-1)] p-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={ACTIVITY_GRAPH_URL}
             alt="Ankit Negi's GitHub activity graph"
-            className="min-w-[600px] w-full"
+            className="w-full h-auto"
           />
         </div>
 
@@ -40,7 +40,7 @@ export function GithubStats() {
           <img
             src={CALENDAR_URL}
             alt="Ankit Negi's GitHub contribution calendar"
-            className="min-w-[600px] w-full"
+            className="h-auto"
           />
         </div>
       </div>

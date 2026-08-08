@@ -66,7 +66,7 @@ export function BlogCarousel({ posts }: { posts: BlogPost[] }) {
             >
               <p className="font-mono text-[11px] text-[var(--text-muted)] mb-2">
                 {formatDate(post.publishedAt)} · {post.readTimeInMinutes} min
-                read
+                Read
               </p>
               <h3 className="font-display text-lg font-semibold mb-2 flex items-center gap-1.5">
                 {post.title}

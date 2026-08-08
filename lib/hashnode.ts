@@ -1,3 +1,5 @@
+import { XMLParser } from "fast-xml-parser";
+
 export type BlogPost = {
   id: string;
   title: string;
@@ -9,78 +11,88 @@ export type BlogPost = {
   readTimeInMinutes: number;
 };
 
-type HashnodePostNode = {
-  id: string;
-  title: string;
-  brief: string;
-  slug: string;
-  url: string;
-  coverImage: { url: string } | null;
-  publishedAt: string;
-  readTimeInMinutes: number;
-};
+const RSS_URL = "https://ankitnegi-dev.hashnode.dev/rss.xml";
 
-type HashnodeResponse = {
-  data?: {
-    publication?: {
-      posts?: {
-        edges?: { node: HashnodePostNode }[];
-      };
-    };
-  };
-};
+function stripHtml(html: string): string {
+  return html
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
-const HASHNODE_ENDPOINT = "https://gql.hashnode.com";
-const PUBLICATION_HOST = "ankitnegi-dev.hashnode.dev";
+function estimateReadTime(text: string): number {
+  const words = text.split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.round(words / 200));
+}
 
-const QUERY = `
-  query Posts($host: String!) {
-    publication(host: $host) {
-      posts(first: 10) {
-        edges {
-          node {
-            id
-            title
-            brief
-            slug
-            url
-            coverImage { url }
-            publishedAt
-            readTimeInMinutes
-          }
-        }
-      }
-    }
+function slugFromUrl(url: string): string {
+  try {
+    const { pathname } = new URL(url);
+    return pathname.replace(/^\/+/, "");
+  } catch {
+    return url;
   }
-`;
+}
+
+type RssItem = {
+  title?: string;
+  link?: string;
+  description?: string;
+  "content:encoded"?: string;
+  pubDate?: string;
+  guid?: string | { "#text"?: string };
+};
 
 export async function getBlogPosts(): Promise<BlogPost[]> {
   try {
-    const res = await fetch(HASHNODE_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        query: QUERY,
-        variables: { host: PUBLICATION_HOST },
-      }),
+    const res = await fetch(RSS_URL, {
       next: { revalidate: 3600 },
     });
 
     if (!res.ok) return [];
 
-    const json: HashnodeResponse = await res.json();
-    const edges = json.data?.publication?.posts?.edges ?? [];
+    const xml = await res.text();
+    const parser = new XMLParser({ ignoreAttributes: false });
+    const parsed = parser.parse(xml);
 
-    return edges.map((edge) => ({
-      id: edge.node.id,
-      title: edge.node.title,
-      brief: edge.node.brief,
-      slug: edge.node.slug,
-      url: edge.node.url,
-      coverImage: edge.node.coverImage?.url ?? null,
-      publishedAt: edge.node.publishedAt,
-      readTimeInMinutes: edge.node.readTimeInMinutes,
-    }));
+    const rawItems = parsed?.rss?.channel?.item;
+    const items: RssItem[] = rawItems
+      ? Array.isArray(rawItems)
+        ? rawItems
+        : [rawItems]
+      : [];
+
+    return items.map((item, i) => {
+      const url = item.link ?? "";
+      const rawContent = item["content:encoded"] ?? item.description ?? "";
+      const plainText = stripHtml(rawContent);
+      const brief =
+        plainText.length > 220
+          ? `${plainText.slice(0, 220).trim()}…`
+          : plainText;
+
+      const id =
+        (typeof item.guid === "string" ? item.guid : item.guid?.["#text"]) ??
+        url ??
+        String(i);
+
+      return {
+        id,
+        title: item.title ?? "Untitled",
+        brief,
+        slug: slugFromUrl(url),
+        url,
+        coverImage: null,
+        publishedAt: item.pubDate ?? new Date().toISOString(),
+        readTimeInMinutes: estimateReadTime(plainText),
+      };
+    });
   } catch {
     return [];
   }

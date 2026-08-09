@@ -94,7 +94,7 @@ export default async function ProjectCaseStudy({
 
         {caseStudy.frontmatter.metrics && (
           <div className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-1)] p-4 mb-10">
-            <p className="font-mono text-xs text-[var(--text-muted)] uppercase tracking-wide mb-2">
+            <p className="font-mono text-[clamp(0.75rem,0.7rem+0.4vw,0.9rem)] text-[var(--text-muted)] uppercase tracking-wide mb-2">
               At a glance
             </p>
             <ul className="space-y-1">

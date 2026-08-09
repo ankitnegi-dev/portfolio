@@ -109,7 +109,7 @@ export default async function AdminPage() {
         <div className="space-y-10">
           {/* summary cards */}
           <div>
-            <p className="font-mono text-xs text-[var(--text-muted)] uppercase tracking-wide mb-3">
+            <p className="font-mono text-[clamp(0.75rem,0.7rem+0.4vw,0.9rem)] text-[var(--text-muted)] uppercase tracking-wide mb-3">
               Overview
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -141,7 +141,7 @@ export default async function AdminPage() {
 
           {/* recent activity */}
           <div>
-            <p className="font-mono text-xs text-[var(--text-muted)] uppercase tracking-wide mb-3">
+            <p className="font-mono text-[clamp(0.75rem,0.7rem+0.4vw,0.9rem)] text-[var(--text-muted)] uppercase tracking-wide mb-3">
               Recent activity
             </p>
             {data.trace.length === 0 ? (
@@ -178,7 +178,7 @@ export default async function AdminPage() {
 
           {/* contact submissions */}
           <div>
-            <p className="font-mono text-xs text-[var(--text-muted)] uppercase tracking-wide mb-3">
+            <p className="font-mono text-[clamp(0.75rem,0.7rem+0.4vw,0.9rem)] text-[var(--text-muted)] uppercase tracking-wide mb-3">
               Contact submissions
             </p>
             {data.contacts.length === 0 ? (

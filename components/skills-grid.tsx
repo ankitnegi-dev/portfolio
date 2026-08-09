@@ -29,7 +29,7 @@ export function SkillsGrid() {
           key={group.label}
           className="rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-1)] p-4"
         >
-          <p className="font-mono text-xs text-[var(--text-muted)] uppercase tracking-wide mb-3">
+          <p className="font-mono text-[clamp(0.75rem,0.7rem+0.4vw,0.9rem)] text-[var(--text-muted)] uppercase tracking-wide mb-3">
             {group.label}
           </p>
           <div className="flex flex-wrap gap-2">

@@ -17,7 +17,7 @@ export default function ContactPage() {
         <div className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] px-3 py-1 mb-5">
           <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
           <span className="font-mono text-xs text-[var(--text-secondary)]">
-            open to internships · available now
+            open to internships, freelance &amp; collabs · available now
           </span>
         </div>
 
@@ -25,8 +25,8 @@ export default function ContactPage() {
           Get in touch
         </h1>
         <p className="text-[var(--text-secondary)] text-sm mb-1 max-w-md">
-          Open to internships, collaborations, and interesting problems.
-          Email is the fastest way to reach me.
+          Open to internships, freelance work, collaborations, and
+          interesting problems. Email is the fastest way to reach me.
         </p>
         <p className="font-mono text-xs text-[var(--text-muted)] mb-10">
           usually replies within 24 hours

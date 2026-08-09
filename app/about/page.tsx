@@ -40,9 +40,9 @@ export default function AboutPage() {
     infrastructure around it that makes it dependable.
   </p>
   <p>
-    Right now I&apos;m open to interesting collaborations and freelance
-    work - if you&apos;re building something in this space and want to
-    talk shop or work together, reach out.
+    Right now I&apos;m open to internships, freelance work, and
+interesting collaborations - if you&apos;re building something in
+this space and want to talk shop or work together, reach out.
   </p>
 </div>
 

@@ -10,7 +10,7 @@ export function ContactCTA() {
             Have a project in mind?
           </h2>
           <p className="text-sm text-[var(--text-secondary)]">
-            Open to collaborations, freelance work, and interesting problems.
+            Open to internships, freelance work, and interesting collaborations.
           </p>
         </div>
         <Link

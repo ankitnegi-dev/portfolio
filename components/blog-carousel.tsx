@@ -62,11 +62,12 @@ export function BlogCarousel({ posts }: { posts: BlogPost[] }) {
               animate={{ opacity: 1, x: 0 }}
               exit={shouldReduceMotion ? undefined : { opacity: 0, x: -12 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="group block rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-1)] p-6 hover:border-[var(--accent)] transition-colors"
+              className="group block rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-1)] p-5 hover:border-[var(--accent)] transition-colors"
             >
-              <p className="font-mono text-[11px] text-[var(--text-muted)] mb-2">
-                {formatDate(post.publishedAt)} · {post.readTimeInMinutes} min
-                Read
+              <p className="font-mono text-[11px] text-[var(--text-muted)] tracking-wide mb-2">
+                {formatDate(post.publishedAt)}
+                <span className="mx-2 text-[var(--border-strong)]">·</span>
+                {post.readTimeInMinutes}&nbsp;min&nbsp;read
               </p>
               <h3 className="font-display text-lg font-semibold mb-2 flex items-center gap-1.5">
                 {post.title}
@@ -76,7 +77,7 @@ export function BlogCarousel({ posts }: { posts: BlogPost[] }) {
                   className="text-[var(--accent)] opacity-0 group-hover:opacity-100 transition-opacity"
                 />
               </h3>
-              <p className="text-sm text-[var(--text-secondary)] leading-relaxed line-clamp-3">
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed line-clamp-2">
                 {post.brief}
               </p>
             </motion.a>

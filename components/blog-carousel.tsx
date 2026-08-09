@@ -51,7 +51,7 @@ export function BlogCarousel({ posts }: { posts: BlogPost[] }) {
           </button>
         )}
 
-        <div className="flex-1 max-w-xl overflow-hidden">
+        <div className="w-full max-w-md mx-auto overflow-hidden">
           <AnimatePresence mode="wait">
             <motion.a
               key={post.id}

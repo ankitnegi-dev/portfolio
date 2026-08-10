@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { IconX } from "@tabler/icons-react";
 
 const REACTIONS = [
   { label: "impressive", text: "impressive" },
@@ -44,13 +45,9 @@ function getServerReactionSnapshot(): Label | null {
   return null; // server never has a reaction - matches first client render
 }
 
-
 export function ReactionSignals() {
   const shouldReduceMotion = useReducedMotion();
   const [data, setData] = useState<Aggregate | null>(null);
-  // intentionally starts null on both server and client so the first
-  // render matches exactly - localStorage is browser-only and can't be
-  // known at SSR time, so we sync it after mount instead
   const myReaction = useSyncExternalStore(
     subscribeToStorage,
     getStoredReactionSnapshot,
@@ -58,9 +55,16 @@ export function ReactionSignals() {
   );
   const [submitting, setSubmitting] = useState(false);
   const [contactValue, setContactValue] = useState("");
-  const [contactStatus, setContactStatus] = useState <
+  const [contactStatus, setContactStatus] = useState<
     "idle" | "sending" | "sent" | "skipped"
   >("idle");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // derived, not stored - modal visibility always follows directly from
+  // reaction + contact status, so there's nothing to keep in sync via an effect
+  const modalOpen =
+    myReaction === "collab" &&
+    (contactStatus === "idle" || contactStatus === "sending");
 
   useEffect(() => {
     fetch("/api/reactions")
@@ -69,6 +73,24 @@ export function ReactionSignals() {
       .catch(() => setData(null));
   }, []);
 
+  useEffect(() => {
+    if (modalOpen) {
+      // let the modal actually paint before focusing
+      const t = setTimeout(() => inputRef.current?.focus(), 50);
+      return () => clearTimeout(t);
+    }
+  }, [modalOpen]);
+
+  useEffect(() => {
+    if (!modalOpen) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setContactStatus("skipped");
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [modalOpen]);
 
   async function react(label: Label) {
     if (myReaction || submitting) return;
@@ -83,7 +105,7 @@ export function ReactionSignals() {
       const updated = await res.json();
       setData(updated);
       window.localStorage.setItem(STORAGE_KEY, label);
-      window.dispatchEvent(new Event("storage")); // trigger useSyncExternalStore in this same tab
+      window.dispatchEvent(new Event("storage"));
     } catch {
       // silently fail - this is ambient, not critical path
     } finally {
@@ -104,6 +126,10 @@ export function ReactionSignals() {
     } catch {
       setContactStatus("sent"); // fail quietly, don't block the user on retry UX
     }
+  }
+
+  function skipContact() {
+    setContactStatus("skipped");
   }
 
   return (
@@ -174,52 +200,83 @@ export function ReactionSignals() {
 
         {myReaction && (
           <p className="font-mono text-[11px] text-[var(--text-muted)] mt-4">
-            thanks - your signal joined the field above
+            Thanks - your signal joined the field above
           </p>
         )}
 
-        {myReaction === "collab" &&
-          contactStatus !== "sent" &&
-          contactStatus !== "skipped" && (
-            <div className="mt-5 max-w-xs mx-auto">
-              <p className="text-xs text-[var(--text-secondary)] mb-2">
-                Want me to actually reach out? Leave an email or LinkedIn (optional).
-              </p>
-              <div className="flex gap-2">
-                <input
-                  value={contactValue}
-                  onChange={(e) => setContactValue(e.target.value)}
-                  placeholder="you@example.com"
-                  className="flex-1 bg-[var(--surface-1)] border border-[var(--border)] rounded-[var(--radius-sm)] px-3 py-1.5 text-xs outline-none focus:border-[var(--accent)] transition-colors"
-                />
-                <button
-                  onClick={sendContact}
-                  disabled={contactStatus === "sending" || !contactValue.trim()}
-                  className="text-xs font-mono text-[var(--accent)] disabled:text-[var(--text-muted)] px-2"
-                >
-                  send
-                </button>
-                <button
-                  onClick={() => setContactStatus("skipped")}
-                  className="text-xs font-mono text-[var(--text-muted)] hover:text-[var(--text-secondary)] px-2"
-                >
-                  skip
-                </button>
-              </div>
-            </div>
-          )}
-
         {contactStatus === "sent" && (
           <p className="font-mono text-[11px] text-[var(--accent)] mt-4">
-            got it - I&apos;ll reach out
+            Got it - I&apos;ll reach out
           </p>
         )}
 
         <p className="font-mono text-[10px] text-[var(--text-muted)] mt-8 opacity-60">
-          reactions are anonymous · &quot;want to build together&quot; shares a
+          Reactions are anonymous · &quot;want to build together&quot; shares a
           rough, city-level location so I know it&apos;s a real visit
         </p>
       </div>
+
+      <AnimatePresence>
+        {modalOpen && (
+          <motion.div
+            initial={shouldReduceMotion ? undefined : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={shouldReduceMotion ? undefined : { opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm px-4"
+          >
+            <motion.div
+              initial={shouldReduceMotion ? undefined : { opacity: 0, scale: 0.96, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={shouldReduceMotion ? undefined : { opacity: 0, scale: 0.96, y: 8 }}
+              transition={{ duration: 0.18, ease: "easeOut" }}
+              className="w-full max-w-sm rounded-[var(--radius)] border border-[var(--border)] bg-[var(--surface-1)] p-6 shadow-2xl"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <p className="font-display text-base font-semibold">
+                  Want me to actually reach out?
+                </p>
+                <button
+                  onClick={skipContact}
+                  aria-label="Close"
+                  className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors shrink-0"
+                >
+                  <IconX size={18} stroke={1.5} />
+                </button>
+              </div>
+              <p className="text-sm text-[var(--text-secondary)] mb-4">
+                Leave an email or LinkedIn and I&apos;ll follow up. Totally
+                optional - skip if you&apos;d rather stay anonymous.
+              </p>
+              <input
+                ref={inputRef}
+                value={contactValue}
+                onChange={(e) => setContactValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") sendContact();
+                }}
+                placeholder="you@example.com"
+                className="w-full bg-[var(--bg)] border border-[var(--border)] rounded-[var(--radius-sm)] px-3 py-2.5 text-sm outline-none focus:border-[var(--accent)] transition-colors mb-4"
+              />
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={sendContact}
+                  disabled={contactStatus === "sending" || !contactValue.trim()}
+                  className="flex-1 rounded-[var(--radius-sm)] bg-[var(--accent)] text-[var(--bg)] text-sm font-medium py-2.5 disabled:opacity-40 hover:opacity-90 transition-opacity"
+                >
+                  {contactStatus === "sending" ? "sending…" : "send"}
+                </button>
+                <button
+                  onClick={skipContact}
+                  className="text-sm font-mono text-[var(--text-muted)] hover:text-[var(--text-secondary)] px-3 transition-colors"
+                >
+                  skip
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

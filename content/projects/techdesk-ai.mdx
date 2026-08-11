@@ -1,35 +1,58 @@
 ---
-summary: A multi-agent swarm that monitors social media and drafts replies, with a human always in the loop before anything goes out.
+summary: A multi-agent swarm that watches real Reddit and industry-news signals, drafts replies, and puts a human in the loop before anything ships - built to get hands-on with multi-agent orchestration on a genuinely hard problem, not a toy example.
 metrics:
-  - "Multi-agent orchestration via LangGraph"
+  - "4-agent LangGraph pipeline, sequential per signal"
+  - "Real live data - Reddit + LinkedIn industry news, no test dataset"
   - "Kafka event streaming with full audit trail"
-  - "Self-improving replies via RLHF + contextual bandit"
 ---
 
-## The problem
+## Why I built this
 
-Most "AI social media" tools either post without oversight or require someone to manually watch every mention. Neither scales. TechDesk AI was built to sit in between: agents do the watching, drafting, and prioritizing, but nothing ships without a human approving it first.
+I wanted real, hands-on practice with multi-agent orchestration - not a tutorial clone, something with enough moving parts that it would actually break in interesting ways. TechDesk AI simulates a support/social-monitoring team: agents watch for relevant signals, draft responses, and decide what needs a human's attention right now versus what can wait. Nothing ships without a person approving it first.
 
 ## Architecture
 
-The system runs as a swarm of cooperating agents orchestrated with **LangGraph**, backed by **Llama 3.3 70B** for reasoning and drafting. Each agent has a narrow job - one listens for relevant mentions, another drafts a response, another decides what needs a human's attention right now versus what can wait.
+Every incoming signal moves through a **4-agent LangGraph pipeline**, and the graph is strictly sequential per signal - not four agents debating each other, but a routing pipeline:
 
-Agents don't talk to each other directly. Every interaction goes through **Apache Kafka**, which gives the system two things most agent demos skip: a durable, append-only audit trail of every decision an agent made, and the ability to add or restart individual agents without taking the whole system down.
+1. **Orchestrator** - classifies intent and picks a route
+2. **Engagement Agent** - drafts a reply using RAG + persona, for the common case
+3. **Crisis Agent** - skips drafting entirely and escalates straight to human review, for anything sensitive
+4. **ContentCreator Agent** - generates proactive posts when a signal looks like it's going viral
+
+So for any single signal it's always Orchestrator → one specialist agent → Safety Gate → HITL queue. The parallelism in the system doesn't come from agents racing each other - it comes from running multiple **Kafka** consumer instances, each processing a different signal at the same time. Kafka also gives the system a durable, append-only audit trail of every decision an agent made, and lets me restart or scale individual agents without taking the whole pipeline down.
 
 <AgentGraph3D />
 
+## A perception layer with real data, not a demo
+
+There's no test dataset here. The perception layer polls:
+- **Reddit's public JSON API** (no key required) - real posts from r/SaaS, r/techsupport, r/startups, r/customerservice, r/artificial
+- **LinkedIn industry activity via Google News RSS** - real posts and articles from companies like Zendesk, Intercom, and Freshdesk, surfaced as they're published
+
+Twitter is wired up but currently blocked - the Bearer Token is set, but X's Filtered Stream endpoint now requires their $100/month Basic tier, which I haven't paid for. It's a real integration sitting behind a real paywall, not a missing feature.
+
+There was a `SIMULATION_MODE` flag early on that pushed 8 hardcoded sample signals every 30 seconds for testing - useful while wiring up the graph, off by default now that the real feeds work.
+
 ## Retrieval and context
 
-Replies aren't generated from nothing - a **RAG pipeline over PostgreSQL with pgvector** gives agents relevant context (prior conversations, brand voice examples, past resolutions) before they draft anything. This is what keeps drafts from sounding generic.
+Drafts aren't generated from nothing - a **RAG pipeline over PostgreSQL with pgvector** gives the Engagement Agent relevant context (prior conversations, brand voice examples, past resolutions) before it drafts anything. This is what keeps replies from sounding generic.
 
 ## Human-in-the-loop
 
-A **FastAPI + WebSocket dashboard** streams drafted replies to a human reviewer in real time. Nothing is posted without explicit approval - the system's job is to remove the busywork of monitoring and drafting, not the judgment call of what actually gets said publicly.
+A **FastAPI + WebSocket dashboard** streams drafted replies to a human reviewer in real time. Nothing posts without explicit approval - the system's job is to remove the busywork of monitoring and drafting, not the judgment call of what actually gets said publicly.
 
-## Getting better over time
+## Getting better over time - the honest version
 
-Every approval, edit, or rejection a human makes is captured as a preference signal. A **contextual bandit strategy tracker in Redis** uses that signal to shift which drafting strategies get used more often - so the system's suggestions get closer to what a human would actually approve, without retraining a model from scratch.
+Every approval, edit, or rejection a human makes in the dashboard gets captured as a preference signal: an **epsilon-greedy contextual bandit** (ε=0.2) tracks strategy scores in Redis, and an RLHF preference collector saves preference pairs to Postgres.
+
+I want to be straight about where this actually stands: the infrastructure is fully wired and correctly capturing feedback, but I haven't run it long enough with diverse real traffic to see the bandit's routing visibly shift yet. During development the queue accumulated 135 review items, but most came from the same 8 repeated simulation signals rather than varied real interactions - not enough distinct signal to pull the strategy scores away from their starting distribution. Seeing this drift for real needs days of live traffic, not the few weeks a dev environment naturally accumulates. That's a normal, honest state for a small-scale RLHF system to be in - the loop is real, the data volume to prove it out isn't there yet.
+
+## Two bugs worth telling
+
+**The Kafka `UnknownMemberIdError` that only ever hit the first signal.** When the consumer started and the very first signal arrived, the embedding model (`fastembed`, a 66.5MB download) took 30-60 seconds to load. During that window the consumer's heartbeat timed out, the broker evicted it from the consumer group, and it tried to commit an offset under a member ID that no longer existed. Every run failed exactly once, on signal one, then quietly recovered from signal two onward - which made it look like a Kafka configuration problem when it was actually a startup-ordering problem. Fixed by loading the embedding model eagerly at startup, before the Kafka consumer even starts, plus a small rate limit between signals.
+
+**The `venv/` folder that almost got committed.** `.gitignore` only excluded `.venv/`, but the project had both `.venv/` and `venv/` at different points. Caught it reviewing `git status` before the first commit - 500MB+ of packages, one keystroke away from being permanently in the repo history. `git rm -r --cached .` and a corrected `.gitignore` fixed it before it shipped.
 
 ## What I'd build next
 
-The natural next step is letting the bandit tracker reason about *why* a draft got rejected, not just that it did - right now it optimizes on the outcome, not the cause.
+Two honest next steps, not aspirational ones: pay for X's Basic tier so the Twitter connector actually runs, and let the bandit tracker reason about *why* a draft got rejected instead of just that it did - right now it optimizes on the outcome, not the cause.

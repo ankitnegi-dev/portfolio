@@ -1,18 +1,22 @@
 ---
-summary: A document intelligence platform that answers questions over scanned and digital PDFs, with every answer traceable back to the exact page it came from.
+summary: A document intelligence platform - upload PDFs, get automatic classification, and ask questions against them via agentic RAG with real page citations. Started as a scoped intern assessment and kept going well past that scope.
 metrics:
-  - "Hybrid retrieval: vector search + BM25 with Reciprocal Rank Fusion"
-  - "Cross-encoder re-ranking for precision"
-  - "Deployed across Render, Vercel, and Chroma Cloud"
+  - "Hybrid retrieval - vector search + BM25 + Reciprocal Rank Fusion"
+  - "Real documents, not a benchmark dataset"
+  - "JWT auth with access control enforced at retrieval, not just listing"
 ---
 
-## The problem
+## What it is
 
-Most RAG demos answer questions confidently and leave you to verify them yourself. For document-heavy workflows - contracts, reports, filings - that's not good enough. DocIntel was built around one constraint: every answer has to point back to the exact page it came from.
+Upload PDFs or text files, get automatic classification, and ask questions in plain English against your documents through an agentic RAG chatbot that streams back answers with exact page citations. **FastAPI** backend on Render, **Next.js** frontend on Vercel, **Chroma Cloud** for vectors, **PostgreSQL** for relational data, **Backblaze B2** for file storage, **arq + Redis** for the job queue, JWT + bcrypt for auth.
 
-## Ingestion
+## Why I kept going past the brief
 
-Documents come in as scanned or digital PDFs. The pipeline runs **OCR and table extraction** on scanned files, then classifies each document via an LLM so downstream retrieval knows what kind of document it's dealing with before a single question is asked.
+This started as a scoped AI Engineer Intern assessment - parsing, classification, and a basic RAG chatbot with citations was the actual ask. Everything past that - Docker, Postgres, Backblaze, real auth with retrieval-layer scoping (not just hiding documents in a list, actually blocking retrieval of documents you don't own), a durable job queue, ONNX-based reranking - was scope I added on my own, because the assessment turned out to be a more interesting problem than its brief suggested, and I wanted something that held up as a real portfolio piece, not just a passed assessment.
+
+## Real documents, not a benchmark set
+
+The indexed collection includes actual personal documents - a resume, an invoice - alongside a small seeded demo set so the app has something to show without requiring a fresh upload first. Real documents surface real formatting and structure quirks that a clean benchmark corpus never does, which is exactly the kind of mess retrieval needs to be tested against.
 
 ## Retrieval
 
@@ -20,15 +24,36 @@ Pure vector search misses exact terms; pure keyword search misses paraphrases. D
 
 <DocIntelPipeline3D />
 
-
 ## Answering with receipts
 
-Answers stream back over **SSE** and are always paired with **inline, page-level citations** and citation-grounded thumbnails - so a user isn't just told an answer, they can see exactly where it came from and check it themselves in seconds.
+Answers stream back over **SSE** and are always paired with inline, page-level citations and citation-grounded thumbnails - so a user isn't just told an answer, they can see exactly where it came from and check it themselves in seconds.
 
-## From prototype to production
+## The bug that mattered most: a reranker that silently did nothing
 
-Document metadata started as flat JSON files, which worked for a prototype and broke down fast under concurrent access. It was migrated to a **Postgres-backed repository layer**, and the whole app was **containerized with Docker and docker-compose** so the local environment matches what actually runs in production - deployed across Render, Vercel, and Chroma Cloud, with layered upload/storage/API security.
+The cross-encoder reranker imported from `sentence_transformers`. That library had been removed from the dependency list months earlier during an unrelated fix - Render's free tier has a 512MB memory ceiling, and `sentence-transformers` plus torch alone was enough to OOM-crash the service on startup. Pulling it fixed the crash.
 
-## What I'd build next
+What it also did, silently, was break reranking. Every call to the reranker was hitting an exception handler and falling back to returning chunks in their original, unranked order - no crash, no user-visible error, just a debug-level log line easy to miss entirely. Re-ranking had likely been a no-op since the Chroma Cloud migration, and nothing in the product surfaced that. Retrieval still "worked" - it just wasn't doing the extra ranking pass it claimed to be doing, and I only caught it going back through the logs during a later audit pass, not because anything visibly broke.
 
-Multi-document reasoning - right now each answer is grounded in a single document's context; cross-referencing claims across multiple documents is the natural next layer.
+The fix: rewrite the reranker around an ONNX export of the same model instead of torch - same interface, same fallback-on-error behavior, but without the 1.5GB dependency that couldn't fit in memory. I verified the fix by checking for an explicit success log line instead of just assuming silence meant it was working - which is the actual lesson here: **a service that fails silently is worse than one that crashes loudly**, because a crash gets noticed and a silent fallback doesn't. I'm now a lot more suspicious of any `except Exception` block that swallows an error and quietly degrades instead of surfacing it.
+
+## What actually fought back
+
+The initial infrastructure phase - Docker, Postgres, Chroma Cloud, Backblaze all wired together - was a genuinely long deployment debugging cycle: Python version pinning, a `pydantic-core` typo, memory-driven OOM crashes, a uvicorn host-binding bug, CORS, a ChromaDB v1→v2 API migration, and a cosine-distance threshold that needed retuning after the vector store migration. A lot of infrastructure friction packed into one stretch of the build.
+
+The job queue's production story has taken multiple rounds and is still ongoing: Render's paid Redis product didn't persist data on its free tier; the paid tier worked but then triggered a card-verification requirement on the background worker service too, which led to backing that out entirely and shipping an honest 503 instead of a broken feature. That's currently being revisited with a free Redis instance on Upstash and figuring out where the worker process itself can run without hitting another card-verification wall.
+
+## Have I actually evaluated retrieval quality?
+
+Honestly - not yet, formally. Hybrid search plus reranking is implemented and reasoned about correctly, but there's no evaluation harness testing precision/recall against a fixed query set. It's built because the theory says it should help, not backed by measured numbers on real queries yet. That's a clearly identified next step, not something quietly skipped over.
+
+## What's still rough, on purpose or otherwise
+
+- **Uploads are currently broken in production** - the job queue needs a running Redis + worker process, and that isn't fully provisioned yet. The failure mode is honest: a clear 503 with an explanation, not a crash or a silent hang, while this gets sorted.
+- **No retrieval evaluation harness** - reranking and hybrid search are unverified against real precision/recall numbers.
+- **No automated tests or CI.**
+- **A known access-control gap** - public/demo documents can currently be deleted by any logged-in user, a side effect of the access model predating the multi-user ownership redesign.
+- **A caching layer was planned but never designed** - partly blocked on resolving the same production-Redis question uploads depend on.
+
+## Where it stands now
+
+The ONNX reranker fix is live in production and verified via logs, not assumed. The job queue's production gap is actively being worked - Upstash is providing free Redis, and the open question is where the worker process itself can run without a paid tier or a card-verification wall. That's the current frontier of the project - not finished, but honestly documented as in-progress rather than glossed over.

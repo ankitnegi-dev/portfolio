@@ -10,6 +10,7 @@ import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 import { BootIntro } from "@/components/boot-intro";
 import { ConsoleGreeting } from "@/components/console-greeting";
+import { KonamiEasterEgg } from "@/components/konami-easter-egg";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
@@ -106,6 +107,7 @@ export default function RootLayout({
           <AssistantWidget />
           <CommandPalette />
           <ConsoleGreeting />
+          <KonamiEasterEgg />
           <Analytics />
         </Providers>
       </body>

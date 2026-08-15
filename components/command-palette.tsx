@@ -14,6 +14,7 @@ import {
   IconBrandGithub,
   IconLockAccess,
   IconExternalLink,
+  IconTerminal2,
 } from "@tabler/icons-react";
 import { projects } from "@/lib/projects";
 
@@ -30,8 +31,12 @@ const ITEM_CLASS =
 const GROUP_CLASS =
   "font-mono text-[10px] text-[var(--text-muted)] uppercase tracking-wide px-2 pt-3 pb-1 first:pt-2 [&_[cmdk-group-items]]:mt-1";
 
+const HIDDEN_PHRASE = "open sesame";
+
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [easterEggMessage, setEasterEggMessage] = useState<string | null>(null);
   const router = useRouter();
   const { data: session } = useSession();
   const isAdmin = Boolean(session?.user);
@@ -68,7 +73,14 @@ export function CommandPalette() {
     window.dispatchEvent(new Event("open-assistant"));
   }, []);
 
+  function showEasterEgg(message: string) {
+    setEasterEggMessage(message);
+  }
+
   if (!open) return null;
+
+  const isHiddenPhraseMatched =
+    search.trim().toLowerCase() === HIDDEN_PHRASE;
 
   return (
     <div
@@ -90,6 +102,11 @@ export function CommandPalette() {
             </span>
             <Command.Input
               autoFocus
+              value={search}
+              onValueChange={(v) => {
+                setSearch(v);
+                setEasterEggMessage(null);
+              }}
               placeholder="Jump to a page, project, or action…"
               className="flex-1 bg-transparent py-3 text-sm outline-none placeholder:text-[var(--text-muted)]"
             />
@@ -97,6 +114,26 @@ export function CommandPalette() {
               esc
             </kbd>
           </div>
+
+          {easterEggMessage && (
+            <div className="px-4 py-3 border-b border-[var(--border)] font-mono text-xs text-[var(--accent)]">
+              {easterEggMessage}
+            </div>
+          )}
+
+          {isHiddenPhraseMatched && (
+            <button
+              onClick={() =>
+                showEasterEgg(
+                  "Okay, you actually typed that. respect. - ank12it11@gmail.com if you want to talk"
+                )
+              }
+              className="w-full flex items-center gap-2.5 px-4 py-3 text-left text-sm text-[var(--accent)] hover:bg-[var(--surface-2)] transition-colors"
+            >
+              <IconTerminal2 size={16} stroke={1.5} />
+              ... you found it.
+            </button>
+          )}
 
           <Command.List className="max-h-80 overflow-y-auto p-2">
             <Command.Empty className="px-3 py-6 text-center text-sm text-[var(--text-secondary)]">
@@ -160,6 +197,43 @@ export function CommandPalette() {
                   stroke={1.5}
                   className="ml-auto text-[var(--text-muted)]"
                 />
+              </Command.Item>
+            </Command.Group>
+
+            <Command.Group heading="???" className={GROUP_CLASS}>
+              <Command.Item
+                value="sudo"
+                onSelect={() =>
+                  showEasterEgg("sudo: permission denied - nice try though")
+                }
+                className={ITEM_CLASS}
+              >
+                <IconTerminal2 size={16} stroke={1.5} />
+                sudo
+              </Command.Item>
+              <Command.Item
+                value="whoami"
+                onSelect={() =>
+                  showEasterEgg(
+                    "You're the kind of person who checks command palettes for hidden commands. respect."
+                  )
+                }
+                className={ITEM_CLASS}
+              >
+                <IconTerminal2 size={16} stroke={1.5} />
+                whoami
+              </Command.Item>
+              <Command.Item
+                value="matrix"
+                onSelect={() =>
+                  showEasterEgg(
+                    "There is no spoon - but there is a real 3D agent graph on the TechDesk AI case study, go look"
+                  )
+                }
+                className={ITEM_CLASS}
+              >
+                <IconTerminal2 size={16} stroke={1.5} />
+                matrix
               </Command.Item>
             </Command.Group>
 

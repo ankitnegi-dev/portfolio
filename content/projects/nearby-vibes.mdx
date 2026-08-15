@@ -1,35 +1,47 @@
 ---
-summary: A mood-based place recommender - pick "date night" or "quick bite" and get real nearby places from live OpenStreetMap data, no API keys required.
+summary: A mood-based place recommender built entirely on free, open data - pick a vibe like "work mode" or "chill out," and it queries live OpenStreetMap data to find real places nearby. No API budget, no black-box service - just OSM, Overpass, and Nominatim.
 metrics:
-  - "Zero API cost - every data source used is free, no key required"
-  - "Auto-widening search radius (1.5km → 3km → 5km) when results are sparse"
-  - "Client-side Haversine distance calculation, no server round-trip"
+  - "Deterministic mood-to-place mapping, no LLM involved"
+  - "Live Overpass API queries, no caching layer"
+  - "Zero-cost stack - OpenStreetMap, Overpass, Nominatim"
 ---
 
-## The idea
+## Why I built this
 
-Most "places near me" apps default to generic categories - restaurants, gas stations, ATMs. Nearby Vibes starts from mood instead: work mode, date night, quick bite, budget hunt, or a dedicated "new in town" mode for someone who just landed somewhere unfamiliar and needs the actual essentials - hospital, pharmacy, ATM, transit - not a curated "top 10" list.
+It started as a resume project - I wanted something more visual and real-world than a CLI tool. The interesting part came once I noticed Google Maps doesn't let you search by vibe - you always need to already know what you're looking for. I wanted to build something where you just say "I want to work somewhere" and it figures out the rest. OpenStreetMap caught my attention specifically because it's free and community-driven, which matched a deliberate goal: prove I could build a fully functional real-world app on a zero-dollar API budget, not just call a black-box service and hope it holds up.
 
-## Data, entirely free
+## How mood-based search actually works
 
-The whole stack runs on free, keyless APIs: the **Overpass API** for live OpenStreetMap point-of-interest data, **Nominatim** for city search and geocoding, and OpenStreetMap tiles for the map itself, rendered through **Leaflet.js**. Each mood maps to a dynamically built Overpass query - "date night" pulls restaurants, bars, and lounges; "quick bite" pulls fast food and food courts.
+It's a static, deterministic mapping - not AI, on purpose. Each mood is a config object that maps to specific Overpass query tags. "Work Mode," for example, maps to cafes and libraries. The real flow:
 
-## Handling sparse results
+1. User picks a mood
+2. That mood object gets selected
+3. An OverpassQL query string is built dynamically from those tags, the user's GPS coordinates, and a search radius
+4. Overpass returns real OSM nodes
+5. The app maps those nodes into place cards
 
-A single fixed search radius fails constantly - too small in a city, uselessly large in a suburb. Nearby Vibes retries automatically: it queries a 1.5km radius first, and if that comes back empty, **widens to 3km, then 5km**, without the user having to manually adjust anything.
+No LLM anywhere in that chain. Keeping it deterministic was intentional - results stay predictable and fast, and there's no model latency or unpredictability standing between a mood and a result.
 
-## New in Town mode
+## Live data, no caching
 
-This is the most distinct feature: a **checklist of city essentials** - hospital, pharmacy, police, ATM, grocery, transit, post office, restaurant - with a progress bar as each is found, plus free-text keyword search for anything not on the list (searching "SBI ATM" or "Apollo Hospital" directly). It's built for the specific moment of arriving somewhere new with no local knowledge yet.
+Every search hits the real Overpass API live - `overpass-api.de`, in real time, current OSM data, no caching layer sitting in front of it. The tradeoff: if Overpass is under load, a request can time out, which is why there's a 15-second timeout with a proper error message instead of a silent hang. A localStorage cache for repeated searches in the same area is a known, deliberate gap - not implemented yet, but on the list.
 
-## Distance and sorting
+## Two real bugs, two different categories
 
-Every result gets a real-world distance via the **Haversine formula**, calculated client-side against the user's GPS coordinates from the browser's Geolocation API - no server needed for something this cheap to compute. Results can be filtered to **open now** and sorted by nearest or top-rated.
+**The WSL path conflict.** Developing on Linux via WSL on Windows, `npm start` was silently launching through Windows CMD instead of the Linux shell - Windows' own Node.js installation was leaking into the WSL `PATH`. The error, `Cannot find module 'C:\Windows\package.json'`, made no sense on its face. Fixed by installing Node via `nvm` inside WSL to isolate it completely from Windows, and setting `appendWindowsPath = false` in `/etc/wsl.conf`. This one cost almost a full day before the actual cause was clear - a good reminder that not every confusing error is in your application code.
 
-## Persistence without a backend
+**The map that duplicated itself.** Leaflet is vanilla JS, not built with React's render cycle in mind - every re-render was re-initializing the map, stacking duplicate map instances on top of each other. Fixed with a `useRef` to hold the single map instance, and an early return at the top of the effect (`if (mapInstance.current) return`) so initialization only ever runs once.
 
-Favorites and search history are saved entirely in **localStorage** - no account, no database, no backend at all. A stats dashboard surfaces usage patterns (total searches, mood breakdown, cities visited) purely from what's already stored locally.
+## What fought back the hardest
 
-## What I'd build next
+Roughly 3-4 days of active building. Three things ate most of that time:
 
-The most valuable upgrade would be reliability around the Overpass API itself - public instances rate-limit under load, so a caching layer (even a simple one) between the client and Overpass would make repeat searches instant and reduce how often the app hits that shared public resource.
+- **Leaflet + React integration** - managing the map's lifecycle with a ref instead of state, and making sure markers updated without re-creating the whole map, took the most iteration
+- **OverpassQL syntax** - poorly documented for beginners; getting a single query to correctly request multiple amenity types, and understanding why some near-identical queries returned nothing while others returned dozens of results, took real trial and error
+- **The WSL environment itself** - as above, nearly a full day lost to a path conflict that had nothing to do with the actual app
+
+## What's still rough, on purpose or otherwise
+
+- **Ratings are fake** - OSM doesn't provide ratings the way Google Maps does, so a deterministic fake rating is generated from each place's ID, meaning the same place always shows the same rating. It looks real, it isn't. A real version would integrate an actual ratings source.
+- **Open/closed status is approximate** - currently just checks whether the current hour falls between 7am and 11pm. OSM does have real opening-hours data, but it's complex to parse correctly and that work hasn't been done yet.
+- **No caching** - every search hits Overpass live; if the API is slow or down, the search just fails rather than falling back to anything cached.

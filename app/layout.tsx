@@ -9,6 +9,7 @@ import { Providers } from "@/app/providers";
 import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 import { BootIntro } from "@/components/boot-intro";
+import { ConsoleGreeting } from "@/components/console-greeting";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
@@ -104,6 +105,7 @@ export default function RootLayout({
           <Footer />
           <AssistantWidget />
           <CommandPalette />
+          <ConsoleGreeting />
           <Analytics />
         </Providers>
       </body>

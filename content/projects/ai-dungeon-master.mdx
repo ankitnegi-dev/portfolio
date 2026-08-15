@@ -1,31 +1,53 @@
 ---
-summary: A full-stack AI text adventure that narrates in real time, sees the world through your camera, and turns your playthrough into a storybook.
+summary: A multiplayer AI text adventure where you can hold up a real object to your webcam and watch the DM weave it into the story - live narration, live scene art, live voice, all generated on the fly, nothing scripted.
 metrics:
-  - "Low-latency streaming narration via Groq + Llama 3.3 70B"
-  - "Real-world object recognition via Llama 4 Scout 17B"
-  - "Per-action scene generation with FLUX.1-schnell"
+  - "Live vision - real objects become story items via Groq's vision model"
+  - "Fully live APIs - no cached or scripted demo path"
+  - "Every playthrough narratively different, same opening scenario"
 ---
 
-## The idea
+## Why I built this
 
-Text adventures live or die on how fast the story responds to you. A three-second wait after every choice kills immersion. AI Dungeon Master was built around low-latency streaming narration first - everything else was designed around keeping that fast.
+Most AI text adventures are pure chat - you type, it responds. The idea that made this feel worth building was different: what if the DM could actually *see* your world? Picture holding up a coffee mug to your webcam and having the DM narrate it into the story as the Ancient Chalice of Forgotten Elixirs. That felt genuinely new, not another chatbot wrapper - the multimodal angle was the creative spark, not the game mechanics themselves.
 
-## Narration
+## How the vision mechanic actually works
 
-Story text streams token-by-token over **Server-Sent Events**, powered by the **Groq API running Llama 3.3 70B** - Groq's inference speed is what makes the narration feel closer to a live dungeon master typing in real time than a chatbot generating a paragraph and dumping it all at once.
+1. Mid-game, the player clicks a camera button
+2. A camera overlay opens with gold corner brackets - a framing device signaling "show something to the DM"
+3. The player holds up any physical object and clicks reveal
+4. The frame is captured and sent as a base64 image to **Groq's Llama 4 Scout vision model**, alongside the last 3 messages of story context
+5. The model returns a fantasy name, a short magical description, and a story integration suggestion
+6. That gets folded into the conversation as a vision message, and the DM narrates the object directly into the active scene - it can become an inventory item, trigger a new quest branch, or just add atmosphere
 
-## Seeing the real world
+The design goal was making it feel like the DM is *seeing* your world, not being told about it. The player never types a description - they just hold something up, and the story shifts around it.
 
-The more unusual piece: the game can use your **camera to recognize physical objects around you** via **Llama 4 Scout 17B**, then weave whatever it sees into the fantasy narrative. Point it at a coffee mug mid-game and the story can turn it into an ancient relic - the world reacts to what's actually in front of you, not just what you type.
+<DungeonMasterScene3D />
 
-## Making it visual and sayable
+## Fully live, no scripted path
 
-Each action generates a matching **AI scene image** through **Hugging Face's FLUX.1-schnell**, so the adventure isn't just text - it has a visual record as you go. **Voice input via the Web Speech API** means you can speak your actions instead of typing them, which matters more than it sounds like for keeping the pace of a live session.
+Every playthrough hits real APIs: **Groq** for narration, **Groq vision** for object recognition, **Pollinations FLUX.1** for scene art, **ElevenLabs** for the welcome voice, **Pusher** for multiplayer sync. There's no cached demo mode - the same opening scenario branches into a genuinely different story every time depending on what you do. The real cost of that: API rate limits are a real constraint during demos, learned the hard way rather than planned for.
 
-## Taking it with you
+## The bug that mattered most: an image that would never load
 
-At the end of a session, the whole playthrough - narration and generated scenes - exports as a **storybook PDF via jsPDF**, so a run through the game becomes something you actually keep, not something that disappears when you close the tab.
+The scene image would sit on "Awaiting Vision" forever, no error anywhere. The API returned 200, the URL was correctly set in state, the `<img>` tag existed in the DOM. Everything *looked* right.
 
-## What I'd build next
+The actual cause took a long time to find: the image tag had `display: none` while a loading flag was true - and browsers simply don't fetch image resources for elements with `display: none`. The URL was set, the element existed, but the browser never made the network request, so `onLoad` never fired, so the loading flag stayed true forever. A perfect, silent deadlock with no error to point at.
 
-Persistent world state across sessions - right now each playthrough is self-contained; carrying consequences and relationships forward into a new session is the obvious next layer.
+The fix: preload the image in memory with a plain JavaScript `Image()` object first, and only update the visible state once it had actually finished loading. After that, images appeared instantly, every time.
+
+## What fought back the hardest
+
+The core game loop - narration, streaming, stats - came together in about two days. The remaining two weeks were almost entirely spent fighting APIs and infrastructure, not game logic.
+
+The worst offender: Gemini's free tier silently returned a `0` quota limit on a project created manually through Cloud Console instead of through AI Studio's normal flow - a working-looking API key that failed with quota errors for reasons that had nothing to do with usage. That burned real hours before the actual cause was clear. The fix was switching narration to **Groq** entirely, which has genuinely generous free limits and sub-second responses.
+
+Second: Pollinations' image API works fine called from a browser, but blocks server-side fetch requests outright - took several wrong approaches before landing on the fix, which was returning just the image URL from the API route and letting the browser fetch it directly instead of proxying it server-side.
+
+## What's still rough, on purpose or otherwise
+
+- **Multiplayer has no reconnection logic** - closing the tab means you can't rejoin the same room, and the in-memory room store resets on every deploy.
+- **Scene images are thematically approximate, not precisely accurate** - FLUX.1 generates strong dark-fantasy art but doesn't reliably depict specific story beats; you might be in a burning castle and get a moonlit forest instead. It sets mood well, it doesn't illustrate the plot precisely.
+- **The welcome voice isn't the one originally intended** - the deep villain-style voice needed a paid ElevenLabs tier; the current free-tier voice is decent, not as chilling as planned.
+- **The PDF storybook export only includes the most recent scene image**, not one per chapter - a proper version would pair every chapter with its own generated art.
+
+None of these are architectural problems - all solvable with more time or paid API tiers, not a redesign.

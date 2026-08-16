@@ -56,6 +56,15 @@ export function CommandPalette() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
+  useEffect(() => {
+    function handleOpenEvent() {
+      setOpen(true);
+    }
+    window.addEventListener("open-command-palette", handleOpenEvent);
+    return () =>
+      window.removeEventListener("open-command-palette", handleOpenEvent);
+  }, []);
+
   const go = useCallback(
     (href: string, external?: boolean) => {
       setOpen(false);

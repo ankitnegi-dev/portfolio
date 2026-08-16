@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   IconMessageCircle2,
@@ -26,6 +26,16 @@ function openCommandPalette() {
 
 export function QuickActionsDock() {
   const [hovered, setHovered] = useState<string | null>(null);
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    function onScroll() {
+      setVisible(window.scrollY < 400);
+    }
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const actions: Action[] = [
     {
@@ -65,7 +75,12 @@ export function QuickActionsDock() {
   ];
 
   return (
-    <div className="hidden md:flex fixed bottom-6 left-1/2 -translate-x-1/2 z-40">
+    <motion.div
+      animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 16 }}
+      transition={{ duration: 0.25, ease: "easeOut" }}
+      style={{ pointerEvents: visible ? "auto" : "none" }}
+      className="hidden md:flex fixed bottom-6 left-1/2 -translate-x-1/2 z-40"
+    >
       <div className="glass-surface border border-[var(--border)] rounded-full px-2 py-2 flex items-center gap-1 shadow-2xl">
         {actions.map((action) => (
           <div key={action.id} className="relative">
@@ -94,6 +109,6 @@ export function QuickActionsDock() {
           </div>
         ))}
       </div>
-    </div>
+    </motion.div>
   );
 }

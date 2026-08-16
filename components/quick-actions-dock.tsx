@@ -29,12 +29,15 @@ export function QuickActionsDock() {
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
-    function onScroll() {
-      setVisible(window.scrollY < 400);
-    }
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    const heroEl = document.getElementById("hero");
+    if (!heroEl) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setVisible(entry.isIntersecting),
+      { threshold: 0 }
+    );
+    observer.observe(heroEl);
+    return () => observer.disconnect();
   }, []);
 
   const actions: Action[] = [

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   IconChevronLeft,
@@ -20,6 +20,7 @@ function formatDate(iso: string) {
 export function BlogCarousel({ posts }: { posts: BlogPost[] }) {
   const [index, setIndex] = useState(0);
   const shouldReduceMotion = useReducedMotion();
+  const lastWheelRef = useRef(0);
 
   if (posts.length === 0) {
     return (
@@ -38,9 +39,25 @@ export function BlogCarousel({ posts }: { posts: BlogPost[] }) {
     setIndex((i) => (i + 1) % posts.length);
   }
 
+  function handleWheel(e: React.WheelEvent) {
+    if (posts.length <= 1) return;
+    const now = Date.now();
+    if (now - lastWheelRef.current < 550) return; // debounce - one step per gesture
+
+    if (Math.abs(e.deltaY) < 12) return; // ignore tiny/accidental movement
+
+    e.preventDefault();
+    lastWheelRef.current = now;
+    if (e.deltaY > 0) next();
+    else prev();
+  }
+
   return (
     <div className="relative">
-      <div className="flex items-center justify-center gap-4">
+      <div
+        onWheel={handleWheel}
+        className="flex items-center justify-center gap-4"
+      >
         {posts.length > 1 && (
           <button
             onClick={prev}

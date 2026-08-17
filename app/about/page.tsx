@@ -1,6 +1,7 @@
 import { Avatar } from "@/components/avatar";
 import { Timeline } from "@/components/timeline";
 import { SkillsGrid } from "@/components/skills-grid";
+import { TechFrequencyChart } from "@/components/tech-frequency-chart";
 
 export const metadata = {
   title: "About - Ankit Negi",
@@ -58,6 +59,13 @@ this space and want to talk shop or work together, reach out.
             Skills
           </p>
           <SkillsGrid />
+        </section>
+
+        <section className="mt-12">
+          <p className="font-mono text-[clamp(0.75rem,0.7rem+0.4vw,0.9rem)] text-[var(--text-muted)] uppercase tracking-wide mb-5">
+            Most used, across projects
+          </p>
+          <TechFrequencyChart />
         </section>
       </div>
     </main>

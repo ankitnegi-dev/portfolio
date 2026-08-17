@@ -7,8 +7,10 @@ from pydantic import BaseModel
 
 from context import build_system_prompt
 
+# Configuration
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
-GROQ_MODEL = os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile")
+# Using openai/gpt-oss-20b for high speed and low latency; can also use openai/gpt-oss-120b or qwen/qwen3.6-27b
+GROQ_MODEL = os.environ.get("GROQ_MODEL", "openai/gpt-oss-20b")
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "*")
@@ -42,6 +44,21 @@ def health():
     return {"status": "ok"}
 
 
+@app.get("/models")
+async def list_models():
+    """Utility endpoint to verify what models are available on your key."""
+    if not GROQ_API_KEY:
+        raise HTTPException(
+            status_code=500, detail="GROQ_API_KEY is not configured."
+        )
+    async with httpx.AsyncClient(timeout=10) as client:
+        resp = await client.get(
+            "https://api.groq.com/openai/v1/models",
+            headers={"Authorization": f"Bearer {GROQ_API_KEY}"},
+        )
+        return resp.json()
+
+
 @app.post("/chat", response_model=ChatResponse)
 async def chat(req: ChatRequest):
     if not GROQ_API_KEY:
@@ -52,7 +69,8 @@ async def chat(req: ChatRequest):
 
     system_prompt = await build_system_prompt()
     messages = [{"role": "system", "content": system_prompt}]
-    for turn in req.history[-6:]:  # keep recent context small
+
+    for turn in req.history[-6:]:  # Keep recent context window small
         messages.append({"role": turn.role, "content": turn.content})
     messages.append({"role": "user", "content": req.message})
 

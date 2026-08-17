@@ -7,6 +7,10 @@ lib/projects.ts and the MDX case studies. That's the single source of
 truth for project data; this file never needs manual updates when a
 project is added or edited on the frontend.
 
+The same /api/context route also returns Ankit's latest blog post and
+live reaction-signal totals, so the assistant can talk about genuinely
+current site activity, not just static project facts.
+
 PROFILE / SKILLS / ACHIEVEMENTS stay static here since nothing else in
 the codebase duplicates them yet - if that changes, apply the same
 fetch-from-frontend pattern to those too.
@@ -20,7 +24,7 @@ import httpx
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "").rstrip("/")
 CACHE_TTL_SECONDS = 600  # 10 minutes
 
-_cache: dict = {"text": None, "fetched_at": 0.0}
+_cache: dict = {"projects_text": None, "extra_text": None, "fetched_at": 0.0}
 
 # Only used if the live endpoint is unreachable (frontend down, network
 # issue, FRONTEND_URL unset). Intentionally minimal - this is a safety
@@ -57,13 +61,38 @@ ACHIEVEMENTS = """
 """
 
 
-async def fetch_projects_context() -> str:
+def _format_extra_context(payload: dict) -> str:
+    lines = []
+
+    latest_post = payload.get("latestPost")
+    if latest_post:
+        lines.append("Latest blog post:")
+        lines.append(f"  \"{latest_post['title']}\" - {latest_post['url']}")
+        if latest_post.get("brief"):
+            lines.append(f"  {latest_post['brief']}")
+        lines.append("")
+
+    signals = payload.get("signals")
+    if signals and signals.get("total"):
+        counts = signals.get("counts", {})
+        parts = [f"{v} {k}" for k, v in counts.items() if v]
+        if parts:
+            lines.append(
+                f"Live visitor reactions so far: {signals['total']} total "
+                f"({', '.join(parts)})."
+            )
+            lines.append("")
+
+    return "\n".join(lines)
+
+
+async def fetch_context() -> tuple[str, str]:
     now = time.time()
-    if _cache["text"] and (now - _cache["fetched_at"] < CACHE_TTL_SECONDS):
-        return _cache["text"]
+    if _cache["projects_text"] and (now - _cache["fetched_at"] < CACHE_TTL_SECONDS):
+        return _cache["projects_text"], _cache["extra_text"] or ""
 
     if not FRONTEND_URL:
-        return FALLBACK_PROJECTS
+        return FALLBACK_PROJECTS, ""
 
     try:
         async with httpx.AsyncClient(timeout=10) as client:
@@ -71,8 +100,7 @@ async def fetch_projects_context() -> str:
             resp.raise_for_status()
             payload = resp.json()
     except Exception:
-        # Serve the last good copy if we have one, otherwise the fallback.
-        return _cache["text"] or FALLBACK_PROJECTS
+        return _cache["projects_text"] or FALLBACK_PROJECTS, _cache["extra_text"] or ""
 
     lines = []
     for i, p in enumerate(payload.get("projects", []), start=1):
@@ -92,28 +120,32 @@ async def fetch_projects_context() -> str:
             lines.append(f"   Source: {github}")
         lines.append("")
 
-    text = "\n".join(lines)
-    _cache["text"] = text
+    projects_text = "\n".join(lines)
+    extra_text = _format_extra_context(payload)
+
+    _cache["projects_text"] = projects_text
+    _cache["extra_text"] = extra_text
     _cache["fetched_at"] = now
-    return text
+    return projects_text, extra_text
 
 
 async def build_system_prompt() -> str:
-    projects_text = await fetch_projects_context()
-    return f"""You are a concise assistant embedded on Ankit Negi's portfolio site.
-You answer visitor questions about Ankit's background, skills, and projects
-using ONLY the context below. If something isn't covered by the context,
-say you don't have that information rather than guessing.
+    projects_text, extra_text = await fetch_context()
 
-Keep answers short (2-4 sentences unless asked for detail), friendly, and
-factual. Don't invent metrics, dates, or claims not present in the context.
+    extra_block = f"\n--- CURRENT SITE ACTIVITY ---\n{extra_text}\n" if extra_text else ""
+
+    return f"""You are Ankit Negi's portfolio assistant - you talk about his work the way someone who actually knows him would, not like a corporate FAQ bot. Be direct, a little informal, and genuinely enthusiastic about the technical details when they come up, without overselling anything.
+
+Answer using ONLY the context below. If something isn't covered, say so plainly instead of guessing or padding the answer.
+
+Keep answers conversational and tight - 2-4 sentences unless someone clearly wants depth, in which case go deeper. Don't invent metrics, dates, or claims not present in the context. If asked about current site activity (backend status, recent visitor reactions, the latest blog post), use the CURRENT SITE ACTIVITY section below - that's real, live data, not a static fact.
 
 --- PROFILE ---
 {PROFILE}
 
 --- PROJECTS ---
 {projects_text}
-
+{extra_block}
 --- SKILLS ---
 {SKILLS}
 

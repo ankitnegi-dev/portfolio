@@ -11,6 +11,7 @@ import {
   IconMessage,
   IconCircleCheckFilled,
   IconCircleXFilled,
+  IconTrash,
 } from "@tabler/icons-react";
 import { useBackendStatus } from "@/lib/use-backend-status";
 import Image from "next/image";
@@ -23,6 +24,20 @@ const SUGGESTIONS = [
   "What's DocIntel's retrieval pipeline?",
   "What's Ankit's tech stack?",
 ];
+
+const STORAGE_KEY = "assistant_conversation";
+
+function loadStoredMessages(): Message[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
 
 function TypingDots({ label }: { label: string }) {
   return (
@@ -87,7 +102,7 @@ function StatusCard() {
 export function AssistantWidget() {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<View>("home");
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(loadStoredMessages);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [slowWake, setSlowWake] = useState(false);
@@ -97,6 +112,18 @@ export function AssistantWidget() {
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
   }, [messages, loading]);
+
+  useEffect(() => {
+    try {
+      if (messages.length > 0) {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+      } else {
+        window.localStorage.removeItem(STORAGE_KEY);
+      }
+    } catch {
+      // localStorage unavailable (privacy mode, etc.) - conversation just won't persist
+    }
+  }, [messages]);
 
   useEffect(() => {
     function handleOpenEvent() {
@@ -113,6 +140,15 @@ export function AssistantWidget() {
       if (next) setView("home"); // always land on Home when reopening
       return next;
     });
+  }
+
+  function clearConversation() {
+    setMessages([]);
+    try {
+      window.localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // ignore
+    }
   }
 
   async function send(text: string) {
@@ -225,14 +261,14 @@ export function AssistantWidget() {
                     aria-current="page"
                   >
                     <IconHome size={18} stroke={1.5} />
-                    <span className="text-[10px] font-mono">home</span>
+                    <span className="text-[10px] font-mono">Home</span>
                   </button>
                   <button
                     onClick={goToMessagesTab}
                     className="flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
                   >
                     <IconMessage size={18} stroke={1.5} />
-                    <span className="text-[10px] font-mono">messages</span>
+                    <span className="text-[10px] font-mono">Messages</span>
                   </button>
                 </nav>
               </div>
@@ -275,14 +311,14 @@ export function AssistantWidget() {
                     className="flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
                   >
                     <IconHome size={18} stroke={1.5} />
-                    <span className="text-[10px] font-mono">home</span>
+                    <span className="text-[10px] font-mono">Home</span>
                   </button>
                   <button
                     className="flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[var(--accent)]"
                     aria-current="page"
                   >
                     <IconMessage size={18} stroke={1.5} />
-                    <span className="text-[10px] font-mono">messages</span>
+                    <span className="text-[10px] font-mono">Messages</span>
                   </button>
                 </nav>
               </div>
@@ -302,9 +338,19 @@ export function AssistantWidget() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium">Ask about Ankit</p>
                     <p className="font-mono text-[11px] text-[var(--text-muted)] truncate">
-                      Answers grounded in his actual Projects
+                      Answers grounded in his actual work - live
                     </p>
                   </div>
+                  {messages.length > 0 && (
+                    <button
+                      onClick={clearConversation}
+                      aria-label="Clear conversation"
+                      title="Clear conversation"
+                      className="text-[var(--text-secondary)] hover:text-[var(--accent-warm)] transition-colors p-1"
+                    >
+                      <IconTrash size={16} stroke={1.5} />
+                    </button>
+                  )}
                   <button
                     onClick={() => setOpen(false)}
                     aria-label="Close assistant"

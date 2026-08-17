@@ -5,6 +5,7 @@ import { IconArrowLeft, IconBrandGithub, IconExternalLink } from "@tabler/icons-
 import { projects } from "@/lib/projects";
 import { getCaseStudy } from "@/lib/mdx";
 import { mdxComponents } from "@/components/mdx-components";
+import { SITE_URL } from "@/lib/site";
 
 export function generateStaticParams() {
   return projects.map((p) => ({ slug: p.slug }));
@@ -33,15 +34,72 @@ export default async function ProjectCaseStudy({
   const caseStudy = getCaseStudy(slug);
   if (!caseStudy) notFound();
 
+  const pageUrl = `${SITE_URL}/projects/${project.slug}`;
+
+  const softwareApplicationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: project.title,
+    description: caseStudy.frontmatter.summary,
+    url: pageUrl,
+    applicationCategory: "DeveloperApplication",
+    operatingSystem: "Web",
+    author: {
+      "@type": "Person",
+      name: "Ankit Negi",
+      url: SITE_URL,
+    },
+    ...(project.links.demo && { downloadUrl: project.links.demo }),
+    ...(project.links.github && { codeRepository: project.links.github }),
+    keywords: project.tech.join(", "),
+    datePublished: `${project.date}-01`,
+  };
+
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: SITE_URL,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Work",
+        item: `${SITE_URL}/projects`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: project.title,
+        item: pageUrl,
+      },
+    ],
+  };
+
   return (
     <main className="flex-1">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(softwareApplicationJsonLd),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
+
       <div className="max-w-2xl mx-auto px-6 pt-16 pb-24">
         <Link
           href="/projects"
           className="inline-flex items-center gap-1.5 font-mono text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors mb-8"
         >
           <IconArrowLeft size={14} stroke={1.5} />
-          all work
+          All work
         </Link>
 
         <p className="font-mono text-xs text-[var(--text-muted)] mb-2">
@@ -75,7 +133,7 @@ export default async function ProjectCaseStudy({
                 className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
               >
                 <IconBrandGithub size={16} stroke={1.5} />
-                source
+                Source
               </a>
             )}
             {project.links.demo && (
@@ -86,7 +144,7 @@ export default async function ProjectCaseStudy({
                 className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
               >
                 <IconExternalLink size={16} stroke={1.5} />
-                live demo
+                Live demo
               </a>
             )}
           </div>

@@ -6,6 +6,24 @@ const LABELS = ["impressive", "curious", "collab", "browsing"] as const;
 type Label = (typeof LABELS)[number];
 
 type TracePoint = { x: number; y: number; label: Label; ts: number };
+type DayCount = { date: string; count: number };
+
+async function getWeeklyTrend(
+  redis: NonNullable<ReturnType<typeof getRedis>>
+): Promise<DayCount[]> {
+  const days: DayCount[] = [];
+  const now = new Date();
+
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    const count = (await redis.get<number>(`reactions:day:${key}`)) ?? 0;
+    days.push({ date: key, count: Number(count) || 0 });
+  }
+
+  return days;
+}
 
 async function buildAggregate(redis: NonNullable<ReturnType<typeof getRedis>>) {
   const counts: Record<Label, number> =
@@ -17,12 +35,14 @@ async function buildAggregate(redis: NonNullable<ReturnType<typeof getRedis>>) {
   const todayCount = (await redis.get<number>(`reactions:day:${today}`)) ?? 0;
 
   const trace = await redis.lrange<TracePoint>("reactions:trace", 0, 149);
+  const trend = await getWeeklyTrend(redis);
 
   return {
     counts: Object.fromEntries(LABELS.map((l) => [l, Number(counts[l]) || 0])),
     total,
     today: Number(todayCount) || 0,
     trace,
+    trend,
   };
 }
 
@@ -67,6 +87,7 @@ export async function GET() {
       total: 0,
       today: 0,
       trace: [],
+      trend: [],
     });
   }
 
@@ -96,10 +117,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "invalid label" }, { status: 400 });
   }
 
-  // scatter into the open band above the prompt, well clear of the
-  // buttons/text - generated server-side so it's not tied to click position
-  const x = Math.random() * 90 + 5; // 5–95%
-  const y = Math.random() * 25 + 6; // 6–31%
+  const x = Math.random() * 90 + 5;
+  const y = Math.random() * 25 + 6;
 
   const today = new Date().toISOString().slice(0, 10);
   const point: TracePoint = { x, y, label: label as Label, ts: Date.now() };
@@ -114,7 +133,7 @@ export async function POST(req: Request) {
   await Promise.all([
     redis.hincrby("reactions:counts", label, 1),
     redis.incr(`reactions:day:${today}`),
-    redis.expire(`reactions:day:${today}`, 60 * 60 * 48),
+    redis.expire(`reactions:day:${today}`, 60 * 60 * 24 * 8), // 8 days, was 48h
   ]);
 
   if (label === "collab") {

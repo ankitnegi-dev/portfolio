@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { IconX } from "@tabler/icons-react";
+import { ReactionTrendChart } from "@/components/reaction-trend-chart";
 
 const REACTIONS = [
   { label: "impressive", text: "impressive" },
@@ -18,6 +19,7 @@ type Aggregate = {
   total: number;
   today: number;
   trace: TracePoint[];
+  trend: { date: string; count: number }[];
 };
 
 const LABEL_COLORS: Record<Label, string> = {
@@ -197,6 +199,8 @@ export function ReactionSignals() {
             );
           })}
         </div>
+
+        {data && <ReactionTrendChart trend={data.trend} />}
 
         {myReaction && (
           <p className="font-mono text-[11px] text-[var(--text-muted)] mt-4">

@@ -41,12 +41,14 @@ export function BlogCarousel({ posts }: { posts: BlogPost[] }) {
 
   function handleWheel(e: React.WheelEvent) {
     if (posts.length <= 1) return;
-    const now = Date.now();
-    if (now - lastWheelRef.current < 550) return; // debounce - one step per gesture
+
+    e.preventDefault(); // always block page scroll while hovering the carousel
 
     if (Math.abs(e.deltaY) < 12) return; // ignore tiny/accidental movement
 
-    e.preventDefault();
+    const now = Date.now();
+    if (now - lastWheelRef.current < 550) return; // debounce - one step per gesture
+
     lastWheelRef.current = now;
     if (e.deltaY > 0) next();
     else prev();

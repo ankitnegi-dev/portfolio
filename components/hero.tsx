@@ -22,6 +22,7 @@ export function Hero() {
   return (
     <CursorGlow>
       <motion.section
+        id="hero"
         variants={shouldReduceMotion ? undefined : container}
         initial={shouldReduceMotion ? undefined : "hidden"}
         animate={shouldReduceMotion ? undefined : "show"}

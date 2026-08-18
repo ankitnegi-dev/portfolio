@@ -97,7 +97,7 @@ async def chat(req: ChatRequest):
     except httpx.RequestError as e:
         raise HTTPException(status_code=502, detail=f"Upstream request failed: {e}")
 
-        reply = data["choices"][0]["message"]["content"]
+    reply = data["choices"][0]["message"]["content"]
     # belt-and-suspenders: even if the model ignores the style instruction,
     # em/en dashes never reach the frontend
     reply = reply.replace("—", " - ").replace("–", " - ")

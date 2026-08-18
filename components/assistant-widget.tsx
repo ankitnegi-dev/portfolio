@@ -103,6 +103,7 @@ export function AssistantWidget() {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<View>("home");
   const [messages, setMessages] = useState<Message[]>(loadStoredMessages);
+  const [streamingText, setStreamingText] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [slowWake, setSlowWake] = useState(false);
@@ -111,7 +112,7 @@ export function AssistantWidget() {
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
-  }, [messages, loading]);
+  }, [messages, loading, streamingText]);
 
   useEffect(() => {
     try {
@@ -158,19 +159,75 @@ export function AssistantWidget() {
     setInput("");
     setLoading(true);
     setSlowWake(false);
+    setStreamingText(null);
 
     const wakeTimer = setTimeout(() => setSlowWake(true), 4000);
+    let accumulated = "";
+    let firstTokenReceived = false;
+    let streamHadError = false;
 
     try {
-      const res = await fetch("/api/chat", {
+      const res = await fetch("/api/chat/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: text, history: nextMessages }),
       });
-      const data = await res.json();
+
+      if (!res.body) throw new Error("No response body");
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const parts = buffer.split("\n\n");
+        buffer = parts.pop() ?? "";
+
+        for (const part of parts) {
+          const line = part.trim();
+          if (!line.startsWith("data:")) continue;
+          const raw = line.slice(5).trim();
+          if (raw === "[DONE]") continue;
+
+          let parsed: { content?: string; error?: string };
+          try {
+            parsed = JSON.parse(raw);
+          } catch {
+            continue;
+          }
+
+          if (parsed.error) {
+            streamHadError = true;
+            continue;
+          }
+
+          if (parsed.content) {
+            if (!firstTokenReceived) {
+              firstTokenReceived = true;
+              clearTimeout(wakeTimer);
+              setSlowWake(false);
+              setLoading(false);
+            }
+            accumulated += parsed.content;
+            setStreamingText(accumulated);
+          }
+        }
+      }
+
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: data.reply ?? "Something went wrong." },
+        {
+          role: "assistant",
+          content:
+            accumulated ||
+            (streamHadError
+              ? "The assistant hit an error. Try again in a moment."
+              : "Something went wrong."),
+        },
       ]);
     } catch {
       setMessages((prev) => [
@@ -183,7 +240,7 @@ export function AssistantWidget() {
     } finally {
       clearTimeout(wakeTimer);
       setLoading(false);
-      setSlowWake(false);
+      setStreamingText(null);
     }
   }
 
@@ -261,14 +318,14 @@ export function AssistantWidget() {
                     aria-current="page"
                   >
                     <IconHome size={18} stroke={1.5} />
-                    <span className="text-[10px] font-mono">Home</span>
+                    <span className="text-[10px] font-mono">home</span>
                   </button>
                   <button
                     onClick={goToMessagesTab}
                     className="flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
                   >
                     <IconMessage size={18} stroke={1.5} />
-                    <span className="text-[10px] font-mono">Messages</span>
+                    <span className="text-[10px] font-mono">messages</span>
                   </button>
                 </nav>
               </div>
@@ -311,14 +368,14 @@ export function AssistantWidget() {
                     className="flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors"
                   >
                     <IconHome size={18} stroke={1.5} />
-                    <span className="text-[10px] font-mono">Home</span>
+                    <span className="text-[10px] font-mono">home</span>
                   </button>
                   <button
                     className="flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[var(--accent)]"
                     aria-current="page"
                   >
                     <IconMessage size={18} stroke={1.5} />
-                    <span className="text-[10px] font-mono">Messages</span>
+                    <span className="text-[10px] font-mono">messages</span>
                   </button>
                 </nav>
               </div>
@@ -394,11 +451,18 @@ export function AssistantWidget() {
                     </div>
                   ))}
 
-                  {loading && (
+                  {loading && streamingText === null && (
                     <div className="bg-[var(--surface-2)] rounded-[var(--radius-sm)] px-3 py-2 max-w-[85%]">
                       <TypingDots
                         label={slowWake ? "waking up the backend…" : "thinking…"}
                       />
+                    </div>
+                  )}
+
+                  {streamingText !== null && (
+                    <div className="text-sm rounded-[var(--radius-sm)] px-3 py-2 max-w-[85%] bg-[var(--surface-2)] text-[var(--text-primary)]">
+                      {streamingText}
+                      <span className="inline-block w-1.5 h-3.5 bg-[var(--accent)] ml-0.5 align-middle animate-pulse" />
                     </div>
                   )}
                 </div>

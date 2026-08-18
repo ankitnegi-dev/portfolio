@@ -1,8 +1,10 @@
+import json
 import os
 
 import httpx
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from context import build_system_prompt
@@ -39,6 +41,10 @@ class ChatResponse(BaseModel):
     reply: str
 
 
+def _clean(text: str) -> str:
+    return text.replace("—", " - ").replace("–", " - ")
+
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
@@ -59,6 +65,15 @@ async def list_models():
         return resp.json()
 
 
+async def _build_messages(req: ChatRequest) -> list[dict]:
+    system_prompt = await build_system_prompt()
+    messages = [{"role": "system", "content": system_prompt}]
+    for turn in req.history[-6:]:  # Keep recent context window small
+        messages.append({"role": turn.role, "content": turn.content})
+    messages.append({"role": "user", "content": req.message})
+    return messages
+
+
 @app.post("/chat", response_model=ChatResponse)
 async def chat(req: ChatRequest):
     if not GROQ_API_KEY:
@@ -67,12 +82,7 @@ async def chat(req: ChatRequest):
             detail="GROQ_API_KEY is not configured on the server.",
         )
 
-    system_prompt = await build_system_prompt()
-    messages = [{"role": "system", "content": system_prompt}]
-
-    for turn in req.history[-6:]:  # Keep recent context window small
-        messages.append({"role": turn.role, "content": turn.content})
-    messages.append({"role": "user", "content": req.message})
+    messages = await _build_messages(req)
 
     payload = {
         "model": GROQ_MODEL,
@@ -98,8 +108,62 @@ async def chat(req: ChatRequest):
         raise HTTPException(status_code=502, detail=f"Upstream request failed: {e}")
 
     reply = data["choices"][0]["message"]["content"]
-    # belt-and-suspenders: even if the model ignores the style instruction,
-    # em/en dashes never reach the frontend
-    reply = reply.replace("—", " - ").replace("–", " - ")
-    reply = " ".join(reply.split())  # collapse any double spaces from the replace
+    reply = _clean(reply)
+    reply = " ".join(reply.split())
     return ChatResponse(reply=reply)
+
+
+@app.post("/chat/stream")
+async def chat_stream(req: ChatRequest):
+    if not GROQ_API_KEY:
+        raise HTTPException(
+            status_code=500,
+            detail="GROQ_API_KEY is not configured on the server.",
+        )
+
+    messages = await _build_messages(req)
+
+    payload = {
+        "model": GROQ_MODEL,
+        "messages": messages,
+        "temperature": 0.4,
+        "max_tokens": 400,
+        "stream": True,
+    }
+
+    async def event_generator():
+        try:
+            async with httpx.AsyncClient(timeout=60) as client:
+                async with client.stream(
+                    "POST",
+                    GROQ_URL,
+                    headers={"Authorization": f"Bearer {GROQ_API_KEY}"},
+                    json=payload,
+                ) as resp:
+                    if resp.status_code != 200:
+                        body = await resp.aread()
+                        error_msg = body.decode(errors="ignore")
+                        yield f"data: {json.dumps({'error': error_msg})}\n\n"
+                        yield "data: [DONE]\n\n"
+                        return
+
+                    async for line in resp.aiter_lines():
+                        if not line.startswith("data: "):
+                            continue
+                        chunk = line[len("data: "):].strip()
+                        if chunk == "[DONE]":
+                            break
+                        try:
+                            data = json.loads(chunk)
+                        except json.JSONDecodeError:
+                            continue
+                        choices = data.get("choices") or [{}]
+                        content = choices[0].get("delta", {}).get("content")
+                        if content:
+                            yield f"data: {json.dumps({'content': _clean(content)})}\n\n"
+        except httpx.RequestError as e:
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+        finally:
+            yield "data: [DONE]\n\n"
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")

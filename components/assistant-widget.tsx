@@ -12,6 +12,8 @@ import {
   IconCircleCheckFilled,
   IconCircleXFilled,
   IconTrash,
+  IconArrowsMaximize,
+  IconArrowsMinimize,
 } from "@tabler/icons-react";
 import { useBackendStatus } from "@/lib/use-backend-status";
 import Image from "next/image";
@@ -99,6 +101,20 @@ function StatusCard() {
   );
 }
 
+function FormattedMessage({ text }: { text: string }) {
+  const parts = text.split(/(\*\*.+?\*\*)/g);
+  return (
+    <>
+      {parts.map((part, i) => {
+        if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
+          return <strong key={i}>{part.slice(2, -2)}</strong>;
+        }
+        return <span key={i}>{part}</span>;
+      })}
+    </>
+  );
+}
+
 export function AssistantWidget() {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<View>("home");
@@ -107,6 +123,7 @@ export function AssistantWidget() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [slowWake, setSlowWake] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const shouldReduceMotion = useReducedMotion();
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -266,10 +283,16 @@ export function AssistantWidget() {
         {open && (
           <motion.div
             initial={shouldReduceMotion ? undefined : { opacity: 0, y: 12, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
+            animate={{
+              opacity: 1,
+              y: 0,
+              scale: 1,
+              width: expanded ? 440 : 340,
+              height: expanded ? 640 : 480,
+            }}
             exit={shouldReduceMotion ? undefined : { opacity: 0, y: 12, scale: 0.98 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className="mb-3 w-[340px] max-w-[calc(100vw-2.5rem)] h-[480px] rounded-[var(--radius)] border border-[var(--border)] glass-surface shadow-2xl flex flex-col overflow-hidden"
+            className="mb-3 max-w-[calc(100vw-2.5rem)] max-h-[calc(100vh-6rem)] rounded-[var(--radius)] border border-[var(--border)] glass-surface shadow-2xl flex flex-col overflow-hidden"
           >
             {/* ---------- HOME ---------- */}
             {view === "home" && (
@@ -403,6 +426,18 @@ export function AssistantWidget() {
                       Answers grounded in his actual work - live
                     </p>
                   </div>
+                                    <button
+                    onClick={() => setExpanded((v) => !v)}
+                    aria-label={expanded ? "Collapse" : "Expand"}
+                    title={expanded ? "Collapse" : "Expand"}
+                    className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors p-1"
+                  >
+                    {expanded ? (
+                      <IconArrowsMinimize size={16} stroke={1.5} />
+                    ) : (
+                      <IconArrowsMaximize size={16} stroke={1.5} />
+                    )}
+                  </button>
                   {messages.length > 0 && (
                     <button
                       onClick={clearConversation}
@@ -443,7 +478,7 @@ export function AssistantWidget() {
                     </div>
                   )}
 
-                  {messages.map((m, i) => (
+                    {messages.map((m, i) => (
                     <div
                       key={i}
                       className={`text-sm rounded-[var(--radius-sm)] px-3 py-2 max-w-[85%] ${
@@ -452,10 +487,13 @@ export function AssistantWidget() {
                           : "bg-[var(--surface-2)] text-[var(--text-primary)]"
                       }`}
                     >
-                      {m.content}
+                      {m.role === "assistant" ? (
+                        <FormattedMessage text={m.content} />
+                      ) : (
+                        m.content
+                      )}
                     </div>
                   ))}
-
                   {loading && streamingText === null && (
                     <div className="bg-[var(--surface-2)] rounded-[var(--radius-sm)] px-3 py-2 max-w-[85%]">
                       <TypingDots

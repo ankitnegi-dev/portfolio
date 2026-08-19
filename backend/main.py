@@ -42,7 +42,9 @@ class ChatResponse(BaseModel):
 
 
 def _clean(text: str) -> str:
-    return text.replace("—", " - ").replace("–", " - ")
+    text = text.replace("—", " - ").replace("–", " - ")
+    text = text.replace("_", "")  # underscores stripped - italics aren't supported in the UI
+    return text
 
 
 @app.get("/health")

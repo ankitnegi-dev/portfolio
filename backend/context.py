@@ -110,8 +110,15 @@ async def fetch_context() -> tuple[str, str]:
             lines.append(f"   {p['summary']}")
         for m in p.get("metrics", []):
             lines.append(f"   - {m}")
-        if p.get("details"):
-            lines.append(f"   {p['details']}")
+        details = p.get("details")
+        if details:
+            # capped - the full case study is long (real bug stories, etc.);
+            # the summary + metrics above already give a solid answer, this
+            # is just extra flavor, not meant to be the whole document
+            truncated = details[:400]
+            if len(details) > 400:
+                truncated += "…"
+            lines.append(f"   {truncated}")
         demo = (p.get("links") or {}).get("demo")
         if demo:
             lines.append(f"   Live demo: {demo}")

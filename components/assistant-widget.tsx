@@ -165,7 +165,7 @@ export function AssistantWidget() {
     let accumulated = "";
     let firstTokenReceived = false;
     let streamHadError = false;
-
+    let streamErrorMessage: string | null = null;
     try {
       const res = await fetch("/api/chat/stream", {
         method: "POST",
@@ -200,8 +200,12 @@ export function AssistantWidget() {
             continue;
           }
 
-          if (parsed.error) {
+                    if (parsed.error) {
             streamHadError = true;
+            if (/rate.?limit/i.test(parsed.error)) {
+              streamErrorMessage =
+                "I'm getting a lot of questions right now - give it a minute and try again.";
+            }
             continue;
           }
 
@@ -218,12 +222,13 @@ export function AssistantWidget() {
         }
       }
 
-      setMessages((prev) => [
+        setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
           content:
             accumulated ||
+            streamErrorMessage ||
             (streamHadError
               ? "The assistant hit an error. Try again in a moment."
               : "Something went wrong."),

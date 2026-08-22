@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 
 export type BackendStatus = "checking" | "waking" | "online" | "offline";
 
+const RECHECK_INTERVAL_MS = 4 * 60 * 1000; // 4 minutes - keeps Render warm during active sessions
+
 export function useBackendStatus() {
   const [status, setStatus] = useState<BackendStatus>("checking");
   const [latency, setLatency] = useState<number | null>(null);
@@ -11,11 +13,15 @@ export function useBackendStatus() {
 
   useEffect(() => {
     let cancelled = false;
-    const wakeTimer = setTimeout(() => {
-      if (!cancelled) setStatus("waking");
-    }, 2500);
+    let wakeTimer: ReturnType<typeof setTimeout> | undefined;
 
-    async function check() {
+    async function check(isFirstCheck: boolean) {
+      if (isFirstCheck) {
+        wakeTimer = setTimeout(() => {
+          if (!cancelled) setStatus("waking");
+        }, 2500);
+      }
+
       try {
         const res = await fetch("/api/health", { cache: "no-store" });
         const data = await res.json();
@@ -37,10 +43,18 @@ export function useBackendStatus() {
       }
     }
 
-    check();
+    check(true);
+
+    // periodic re-check while this component stays mounted - acts as a
+    // natural keepalive ping for the backend during active browsing,
+    // independent of the scheduled GitHub Actions ping that covers
+    // completely idle stretches with no visitors at all
+    const interval = setInterval(() => check(false), RECHECK_INTERVAL_MS);
+
     return () => {
       cancelled = true;
       clearTimeout(wakeTimer);
+      clearInterval(interval);
     };
   }, []);
 

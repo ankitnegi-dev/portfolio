@@ -47,8 +47,11 @@ def _clean(text: str) -> str:
     return text
 
 
-@app.get("/health")
+@app.api_route("/health", methods=["GET", "HEAD"])
 def health():
+    # accepts HEAD as well as GET - uptime monitors (UptimeRobot, Render's
+    # own health checks, etc.) commonly send lightweight HEAD requests by
+    # default, and a GET-only route would 405 on those
     return {"status": "ok"}
 
 

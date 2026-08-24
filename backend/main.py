@@ -35,6 +35,7 @@ class ChatMessage(BaseModel):
 class ChatRequest(BaseModel):
     message: str
     history: list[ChatMessage] = []
+    page: str | None = None
 
 
 class ChatResponse(BaseModel):
@@ -71,7 +72,7 @@ async def list_models():
 
 
 async def _build_messages(req: ChatRequest) -> list[dict]:
-    system_prompt = await build_system_prompt()
+    system_prompt = await build_system_prompt(req.page)
     messages = [{"role": "system", "content": system_prompt}]
     for turn in req.history[-6:]:  # Keep recent context window small
         messages.append({"role": turn.role, "content": turn.content})

@@ -5,6 +5,7 @@ export const maxDuration = 60;
 const RAG_API_URL = process.env.RAG_API_URL;
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
+type ChatBody = { message?: string; history?: ChatMessage[]; page?: string };
 
 function sseError(message: string) {
   return new Response(
@@ -18,7 +19,7 @@ export async function POST(req: NextRequest) {
     return sseError("The assistant backend isn't configured yet.");
   }
 
-  let body: { message?: string; history?: ChatMessage[] };
+    let body: ChatBody;
   try {
     body = await req.json();
   } catch {
@@ -33,9 +34,10 @@ export async function POST(req: NextRequest) {
     const upstream = await fetch(`${RAG_API_URL}/chat/stream`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+        body: JSON.stringify({
         message: body.message,
         history: body.history ?? [],
+        page: body.page,
       }),
     });
 

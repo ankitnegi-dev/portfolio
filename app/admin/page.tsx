@@ -6,6 +6,8 @@ import {
   IconEye,
   IconUsers,
   IconWalk,
+  IconThumbUp,
+  IconThumbDown,
 } from "@tabler/icons-react";
 
 
@@ -13,6 +15,12 @@ const LABELS = ["impressive", "curious", "collab", "browsing"] as const;
 type Label = (typeof LABELS)[number];
 type TracePoint = { x: number; y: number; label: Label; ts: number };
 type ContactSubmission = { contact: string; ts: number };
+type AssistantFeedback = {
+  question: string;
+  answer: string;
+  vote: "up" | "down";
+  ts: number;
+};
 
 const LABEL_ICONS: Record<Label, typeof IconEye> = {
   impressive: IconEye,
@@ -45,8 +53,15 @@ async function getDashboardData() {
     0,
     49
   );
+  const feedback = await redis.lrange<AssistantFeedback>(
+    "assistant:feedback",
+    0,
+    49
+  );
 
   const total = LABELS.reduce((sum, l) => sum + (Number(counts[l]) || 0), 0);
+  const upvotes = feedback.filter((f) => f.vote === "up").length;
+  const downvotes = feedback.filter((f) => f.vote === "down").length;
 
   return {
     counts: Object.fromEntries(
@@ -56,6 +71,9 @@ async function getDashboardData() {
     today: Number(todayCount) || 0,
     trace,
     contacts,
+    feedback,
+    upvotes,
+    downvotes,
   };
 }
 
@@ -198,6 +216,62 @@ export default async function AdminPage() {
                     <span className="font-mono text-[11px] text-[var(--text-muted)] shrink-0">
                       {formatTimestamp(c.ts)}
                     </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* assistant feedback */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <p className="font-mono text-[clamp(0.75rem,0.7rem+0.4vw,0.9rem)] text-[var(--text-muted)] uppercase tracking-wide">
+                Assistant feedback
+              </p>
+              {data.feedback.length > 0 && (
+                <p className="font-mono text-[11px] text-[var(--text-muted)]">
+                  <span className="text-[var(--accent)]">{data.upvotes} 👍</span>
+                  {" · "}
+                  <span className="text-[var(--accent-warm)]">
+                    {data.downvotes} 👎
+                  </span>
+                </p>
+              )}
+            </div>
+            {data.feedback.length === 0 ? (
+              <p className="text-sm text-[var(--text-secondary)]">
+                No feedback on assistant replies yet.
+              </p>
+            ) : (
+              <div className="border border-[var(--border)] rounded-[var(--radius)] divide-y divide-[var(--border)]">
+                {data.feedback.map((f, i) => (
+                  <div key={`${f.ts}-${i}`} className="px-4 py-3">
+                    <div className="flex items-start justify-between gap-3 mb-1.5">
+                      <div className="flex items-center gap-2 min-w-0">
+                        {f.vote === "up" ? (
+                          <IconThumbUp
+                            size={14}
+                            stroke={1.5}
+                            className="text-[var(--accent)] shrink-0"
+                          />
+                        ) : (
+                          <IconThumbDown
+                            size={14}
+                            stroke={1.5}
+                            className="text-[var(--accent-warm)] shrink-0"
+                          />
+                        )}
+                        <span className="text-sm truncate">
+                          {f.question || "(no question captured)"}
+                        </span>
+                      </div>
+                      <span className="font-mono text-[11px] text-[var(--text-muted)] shrink-0">
+                        {formatTimestamp(f.ts)}
+                      </span>
+                    </div>
+                    <p className="text-xs text-[var(--text-secondary)] pl-6 line-clamp-2">
+                      {f.answer || "(no answer captured)"}
+                    </p>
                   </div>
                 ))}
               </div>

@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
 import {
   IconMessageCircle2,
   IconX,
@@ -14,17 +16,32 @@ import {
   IconTrash,
   IconArrowsMaximize,
   IconArrowsMinimize,
+  IconThumbUp,
+  IconThumbDown,
 } from "@tabler/icons-react";
 import { useBackendStatus } from "@/lib/use-backend-status";
+import { projects } from "@/lib/projects";
 import Image from "next/image";
 
 type Message = { role: "user" | "assistant"; content: string };
 type View = "home" | "list" | "chat";
+type Vote = "up" | "down";
 
 const SUGGESTIONS = [
   "What has Ankit built with LangGraph?",
   "What's DocIntel's retrieval pipeline?",
   "What's Ankit's tech stack?",
+];
+
+// larger pool used for dynamic follow-up chips shown after a reply -
+// separate from the initial SUGGESTIONS shown on an empty conversation
+const FOLLOWUP_POOL = [
+  "What has Ankit built with LangGraph?",
+  "What's DocIntel's retrieval pipeline?",
+  "What's Ankit's tech stack?",
+  "What's a bug he ran into recently?",
+  "What's he working on right now?",
+  "How can I get in touch with him?",
 ];
 
 const STORAGE_KEY = "assistant_conversation";
@@ -39,6 +56,40 @@ function loadStoredMessages(): Message[] {
   } catch {
     return [];
   }
+}
+
+function escapeRegExp(s: string) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+const PROJECT_TITLES = projects.map((p) => p.title).sort((a, b) => b.length - a.length);
+const PROJECT_LINK_REGEX =
+  PROJECT_TITLES.length > 0
+    ? new RegExp(`(${PROJECT_TITLES.map(escapeRegExp).join("|")})`, "g")
+    : null;
+
+function linkifyProjects(text: string, keyPrefix: string) {
+  if (!PROJECT_LINK_REGEX) return <span key={keyPrefix}>{text}</span>;
+  const segments = text.split(PROJECT_LINK_REGEX);
+  return (
+    <span key={keyPrefix}>
+      {segments.map((seg, i) => {
+        const project = projects.find((p) => p.title === seg);
+        if (project) {
+          return (
+            <Link
+              key={`${keyPrefix}-${i}`}
+              href={`/projects/${project.slug}`}
+              className="text-[var(--accent)] underline underline-offset-2 hover:opacity-80"
+            >
+              {seg}
+            </Link>
+          );
+        }
+        return <span key={`${keyPrefix}-${i}`}>{seg}</span>;
+      })}
+    </span>
+  );
 }
 
 function TypingDots({ label }: { label: string }) {
@@ -109,7 +160,7 @@ function FormattedMessage({ text }: { text: string }) {
         if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
           return <strong key={i}>{part.slice(2, -2)}</strong>;
         }
-        return <span key={i}>{part}</span>;
+        return linkifyProjects(part, `part-${i}`);
       })}
     </>
   );
@@ -124,8 +175,10 @@ export function AssistantWidget() {
   const [loading, setLoading] = useState(false);
   const [slowWake, setSlowWake] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [votes, setVotes] = useState<Record<number, Vote>>({});
   const shouldReduceMotion = useReducedMotion();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
@@ -162,10 +215,29 @@ export function AssistantWidget() {
 
   function clearConversation() {
     setMessages([]);
+    setVotes({});
     try {
       window.localStorage.removeItem(STORAGE_KEY);
     } catch {
       // ignore
+    }
+  }
+
+  async function sendFeedback(messageIndex: number, vote: Vote) {
+    if (votes[messageIndex]) return; // already voted on this message
+    setVotes((prev) => ({ ...prev, [messageIndex]: vote }));
+
+    const answer = messages[messageIndex]?.content ?? "";
+    const question = messages[messageIndex - 1]?.content ?? "";
+
+    try {
+      await fetch("/api/assistant-feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question, answer, vote }),
+      });
+    } catch {
+      // best-effort - feedback not landing shouldn't disrupt the chat
     }
   }
 
@@ -187,7 +259,11 @@ export function AssistantWidget() {
       const res = await fetch("/api/chat/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, history: nextMessages }),
+        body: JSON.stringify({
+          message: text,
+          history: nextMessages,
+          page: pathname,
+        }),
       });
 
       if (!res.body) throw new Error("No response body");
@@ -217,7 +293,7 @@ export function AssistantWidget() {
             continue;
           }
 
-                    if (parsed.error) {
+          if (parsed.error) {
             streamHadError = true;
             if (/rate.?limit/i.test(parsed.error)) {
               streamErrorMessage =
@@ -239,7 +315,7 @@ export function AssistantWidget() {
         }
       }
 
-        setMessages((prev) => [
+      setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
@@ -276,6 +352,17 @@ export function AssistantWidget() {
   function goToMessagesTab() {
     setView(messages.length > 0 ? "chat" : "list");
   }
+
+  const askedTexts = new Set(
+    messages.filter((m) => m.role === "user").map((m) => m.content)
+  );
+  const followups = FOLLOWUP_POOL.filter((q) => !askedTexts.has(q)).slice(0, 2);
+  const lastMessage = messages[messages.length - 1];
+  const showFollowups =
+    !loading &&
+    streamingText === null &&
+    lastMessage?.role === "assistant" &&
+    followups.length > 0;
 
   return (
     <div className="fixed bottom-5 right-5 z-50">
@@ -426,7 +513,7 @@ export function AssistantWidget() {
                       Answers grounded in his actual work - live
                     </p>
                   </div>
-                                    <button
+                  <button
                     onClick={() => setExpanded((v) => !v)}
                     aria-label={expanded ? "Collapse" : "Expand"}
                     title={expanded ? "Collapse" : "Expand"}
@@ -478,22 +565,67 @@ export function AssistantWidget() {
                     </div>
                   )}
 
-                    {messages.map((m, i) => (
-                    <div
-                      key={i}
-                      className={`text-sm rounded-[var(--radius-sm)] px-3 py-2 max-w-[85%] ${
-                        m.role === "user"
-                          ? "ml-auto bg-[var(--accent)] text-[var(--bg)]"
-                          : "bg-[var(--surface-2)] text-[var(--text-primary)]"
-                      }`}
-                    >
-                      {m.role === "assistant" ? (
-                        <FormattedMessage text={m.content} />
-                      ) : (
-                        m.content
+                  {messages.map((m, i) => (
+                    <div key={i} className={m.role === "user" ? "ml-auto max-w-[85%]" : "max-w-[85%]"}>
+                      <div
+                        className={`text-sm rounded-[var(--radius-sm)] px-3 py-2 ${
+                          m.role === "user"
+                            ? "bg-[var(--accent)] text-[var(--bg)]"
+                            : "bg-[var(--surface-2)] text-[var(--text-primary)]"
+                        }`}
+                      >
+                        {m.role === "assistant" ? (
+                          <FormattedMessage text={m.content} />
+                        ) : (
+                          m.content
+                        )}
+                      </div>
+
+                      {m.role === "assistant" && (
+                        <div className="flex items-center gap-2 mt-1 ml-1">
+                          <button
+                            onClick={() => sendFeedback(i, "up")}
+                            disabled={Boolean(votes[i])}
+                            aria-label="Helpful"
+                            className={`transition-colors ${
+                              votes[i] === "up"
+                                ? "text-[var(--accent)]"
+                                : "text-[var(--text-muted)] hover:text-[var(--text-secondary)] disabled:hover:text-[var(--text-muted)]"
+                            }`}
+                          >
+                            <IconThumbUp size={13} stroke={1.5} />
+                          </button>
+                          <button
+                            onClick={() => sendFeedback(i, "down")}
+                            disabled={Boolean(votes[i])}
+                            aria-label="Not helpful"
+                            className={`transition-colors ${
+                              votes[i] === "down"
+                                ? "text-[var(--accent-warm)]"
+                                : "text-[var(--text-muted)] hover:text-[var(--text-secondary)] disabled:hover:text-[var(--text-muted)]"
+                            }`}
+                          >
+                            <IconThumbDown size={13} stroke={1.5} />
+                          </button>
+                        </div>
                       )}
                     </div>
                   ))}
+
+                  {showFollowups && (
+                    <div className="space-y-1.5 pt-1">
+                      {followups.map((q) => (
+                        <button
+                          key={q}
+                          onClick={() => send(q)}
+                          className="block w-full text-left text-xs rounded-[var(--radius-sm)] border border-[var(--border)] px-3 py-2 text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--text-primary)] transition-colors"
+                        >
+                          {q}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
                   {loading && streamingText === null && (
                     <div className="bg-[var(--surface-2)] rounded-[var(--radius-sm)] px-3 py-2 max-w-[85%]">
                       <TypingDots

@@ -158,7 +158,8 @@ function FormattedMessage({ text }: { text: string }) {
     <>
       {parts.map((part, i) => {
         if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
-          return <strong key={i}>{part.slice(2, -2)}</strong>;
+          const inner = part.slice(2, -2);
+          return <strong key={i}>{linkifyProjects(inner, `bold-${i}`)}</strong>;
         }
         return linkifyProjects(part, `part-${i}`);
       })}

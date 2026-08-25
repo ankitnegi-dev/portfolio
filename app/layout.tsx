@@ -12,6 +12,7 @@ import { BootIntro } from "@/components/boot-intro";
 import { ConsoleGreeting } from "@/components/console-greeting";
 import { KonamiEasterEgg } from "@/components/konami-easter-egg";
 import { QuickActionsDock } from "@/components/quick-actions-dock";
+import { CustomCursor } from "@/components/custom-cursor";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
@@ -110,6 +111,7 @@ export default function RootLayout({
           <ConsoleGreeting />
           <KonamiEasterEgg />
           <QuickActionsDock />
+          <CustomCursor />
           <Analytics />
         </Providers>
       </body>
